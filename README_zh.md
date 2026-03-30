@@ -32,19 +32,9 @@ cp -r mod/micp /path/to/your/moodle/mod/
 ```
 访问 **网站管理 → 通知** 完成安装。依赖 **Moodle 5.x**，PHP 8.1+。
 
-### 第二步：直接使用预制课件（零创作）
+### 第二步：用 AI Skill 生成你自己的课件
 
-三个现成课件，上传即可使用：
-
-| 文件 | 主题 |
-|---|---|
-| `generated/photosynthesis-micp.zip` | 光合作用 — 渐进式步骤设计 |
-| `generated/audio-digitization-micp.zip` | 声音数字化 — 33 个互动节点（英文） |
-| `generated/audio-digitization-micp-zh.zip` | 同上，中文版 |
-
-### 第三步：用 AI Skill 生成你自己的课件
-
-本仓库附带了 **`micp-html-authoring`** — 一个 AI Agent Skill，专Knowhow 如何构建 mod_micp 课件包。
+本仓库附带了 **`micp-html-authoring`** — 一个 AI Agent Skill，知道如何构建 mod_micp 课件包。
 
 **OpenCode Agent 触发词：**
 ```

@@ -32,17 +32,7 @@ cp -r mod/micp /path/to/your/moodle/mod/
 ```
 Visit **Site Administration → Notifications**. Requires **Moodle 5.x**, PHP 8.1+.
 
-### 2. Use a ready-made sample (zero authoring)
-
-Three pre-built lessons are included — upload and go:
-
-| File | Topic |
-|---|---|
-| `generated/photosynthesis-micp.zip` | Photosynthesis — progressive steps |
-| `generated/audio-digitization-micp.zip` | Audio digitization — 33 interactions (EN) |
-| `generated/audio-digitization-micp-zh.zip` | Same, Chinese |
-
-### 3. Generate your own with the bundled Skill
+### 2. Generate your lesson with the bundled Skill
 
 This repo ships with **`micp-html-authoring`** — an AI agent Skill that knows how to build mod_micp lesson packages.
 
