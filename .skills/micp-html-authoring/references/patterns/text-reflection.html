@@ -1,0 +1,32 @@
+/* ================================================================
+   PATTERN: Text Reflection / Free Response
+   ================================================================
+   Textarea for open-ended learner response, graded by non-empty check.
+
+   GRADING: Use "requireNonEmpty": true in micp-scoring.json.
+   Free-text grading is intentionally simple — teacher can review.
+
+   recordAction fires on save button click, not on every keystroke.
+   ================================================================ */
+
+/* HTML:
+<div class="info-card">
+  <h3>{{REFLECTION_TITLE}}</h3>
+  <p>{{REFLECTION_PROMPT}}</p>
+  <label for="reflection-text" class="visually-hidden">{{ARIA_LABEL}}</label>
+  <textarea id="reflection-text"
+    placeholder="{{PLACEHOLDER_TEXT}}"></textarea>
+  <div class="button-row" style="margin-top: var(--space-4);">
+    <button type="button" class="primary" id="save-reflection">{{SAVE_BUTTON}}</button>
+  </div>
+  <div class="feedback" id="reflection-feedback"></div>
+</div>
+
+JS:
+document.getElementById('save-reflection').addEventListener('click', function() {
+  var response = document.getElementById('reflection-text').value.trim();
+  document.getElementById('reflection-feedback').textContent =
+    response ? '{{SAVED_TEXT}}' : '{{EMPTY_TEXT}}';
+  recordAction(makeAction('{{INTERACTION_ID}}', response, response ? 'saved' : 'empty'));
+});
+*/

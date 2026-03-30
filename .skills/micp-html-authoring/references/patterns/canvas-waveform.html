@@ -1,0 +1,74 @@
+/* ================================================================
+   PATTERN: Canvas Waveform Visualizer
+   ================================================================
+   Draws a smooth wave on canvas using requestAnimationFrame.
+
+   USAGE:
+   1. Add <canvas id="my-canvas" width="880" height="260"></canvas> in HTML
+   2. Add CSS class .canvas-wrap around the canvas
+   3. Copy this JS into your lesson script
+
+   CUSTOMIZE:
+   - waveValue(t): change the math to draw different waveforms
+   - animationFrame: remove or slow for static display
+   ================================================================ */
+
+var myCanvas = document.getElementById('my-canvas');
+var animationFrame = 0;
+
+function waveValue(t) {
+  return (Math.sin(t * Math.PI * 2) * 0.55) + (Math.sin(t * Math.PI * 6) * 0.18) + (Math.cos(t * Math.PI * 3) * 0.1);
+}
+
+function drawGrid(ctx, width, height) {
+  var x, y;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(150, 201, 255, 0.2)';
+  ctx.lineWidth = 1;
+  for (x = 0; x <= width; x += width / 10) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+  }
+  for (y = 0; y <= height; y += height / 8) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawWave(ctx, width, height, color, dataPoints, useSteps) {
+  var i, point;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (i = 0; i < dataPoints.length; i += 1) {
+    point = dataPoints[i];
+    if (i === 0) { ctx.moveTo(point.x, point.y); }
+    else if (useSteps) { ctx.lineTo(point.x, dataPoints[i - 1].y); ctx.lineTo(point.x, point.y); }
+    else { ctx.lineTo(point.x, point.y); }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function getPoints(width, height) {
+  var points = [], i, t;
+  for (i = 0; i <= 240; i += 1) {
+    t = i / 240;
+    points.push({ x: t * width, y: height / 2 - waveValue(t + animationFrame * 0.0015) * height * 0.34 });
+  }
+  return points;
+}
+
+function drawFrame() {
+  var ctx = myCanvas.getContext('2d');
+  var w = myCanvas.width, h = myCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  drawWave(ctx, w, h, '#7fffd4', getPoints(w, h), false);
+  animationFrame += 1;
+  window.requestAnimationFrame(drawFrame);
+}
+
+drawFrame();

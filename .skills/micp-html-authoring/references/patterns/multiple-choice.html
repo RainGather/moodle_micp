@@ -1,0 +1,43 @@
+/* ================================================================
+   PATTERN: Multiple Choice Interaction
+   ================================================================
+   Choice interaction with immediate correct/incorrect feedback.
+
+   HTML: One .option-grid container with .option-button children.
+   Each button has: data-group, data-id (interactionid), data-response.
+
+   JS: Add to attachChoiceHandlers() with your specific logic:
+   if (interactionid === '{{CORRECT_INTERACTION_ID}}') {
+     isCorrect = response === '{{CORRECT_RESPONSE}}';
+     correctText = '{{CORRECT_FEEDBACK}}';
+     wrongText = '{{WRONG_FEEDBACK}}';
+   }
+
+   GRADED: requires entry in micp-scoring.json with "correct" rule.
+   UNGRADED: change interactionid or omit from scoring config.
+   ================================================================ */
+
+/* HTML structure:
+<div class="option-grid" id="my-options">
+  <button type="button" class="option-button"
+    data-group="my_group"
+    data-id="my_choice"
+    data-response="a">
+    <strong>Option A</strong>
+    Description of option A.
+  </button>
+  <button type="button" class="option-button"
+    data-group="my_group"
+    data-id="my_choice"
+    data-response="b">
+    <strong>Option B</strong>
+    Description of option B.
+  </button>
+</div>
+<div class="feedback" id="my-feedback"></div>
+
+CSS (already in template):
+.option-button[data-state="correct"] { border-color: rgba(127,255,212,0.48); background: rgba(127,255,212,0.08); }
+.option-button[data-state="wrong"] { border-color: rgba(255,143,143,0.5); background: rgba(255,143,143,0.08); }
+.feedback { min-height: 1.5rem; color: var(--color-muted); }
+*/
