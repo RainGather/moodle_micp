@@ -1,215 +1,167 @@
-# mod_micp — Moodle 互动内容协议
+# mod_micp — AI 驱动的 Moodle 互动课件
 
-**mod_micp** 是一个 Moodle 活动模块，用于承载 AI 自动生成的互动 HTML 课件，并将学生成绩自动写入 Moodle 成绩册。
+[**English**](./README.md)
 
----
+> **传统方式：** 教师花几小时手动制作互动练习。
+> **mod_micp 方式：** 告诉 AI 你要教什么主题，马上拿到一套完整的互动课件。
 
-## 功能概述
-
-1. 教师创建 **mod_micp** 活动，上传 ZIP 包（或选择内置示例）
-2. 学生打开活动，在内嵌的 HTML 页面中进行互动
-3. 每次互动通过 `MICP.sendEvent()` 上报到服务器
-4. 学生点击"完成"时，`MICP.submit()` 触发服务端评分
-5. 最终成绩通过 Moodle 官方 `grade_update()` API 写入成绩册
-
-这是一个**通用互动框架**，不绑定任何特定题型，任何基于 HTML 的互动内容都可以接入。
+mod_micp 只做一件事：用 AI 生成可自动评分的互动 HTML 课件，在 Moodle 里直接打分。
 
 ---
 
-## 环境要求
+## 核心工作流
 
-- **Moodle 5.x**（已在 Moodle 5.0.dev 下验证）
-- PHP 8.1+
+```
+你 → "制作一个关于[主题]的课件" → AI 生成 ZIP 包
+                                               ↓
+                                    上传到 mod_micp
+                                               ↓
+                    学生互动 → 服务器评分 → 成绩写入 gradebook
+```
+
+**AI 负责创作。插件负责推送和评分。**
 
 ---
 
-## 快速开始
+## 现在就开始
 
-### 1. 安装插件
-
-将 `mod/micp/` 目录复制到 Moodle 的 `mod/` 目录下：
+### 第一步：安装插件
 
 ```bash
 cp -r mod/micp /path/to/your/moodle/mod/
 ```
+访问 **网站管理 → 通知** 完成安装。依赖 **Moodle 5.x**，PHP 8.1+。
 
-然后访问 **网站管理 → 通知**，触发数据库安装。
+### 第二步：直接使用预制课件（零创作）
 
-### 2. 创建活动
+三个现成课件，上传即可使用：
 
-1. 在课程页面开启编辑模式
-2. 点击 **添加活动** → 选择 **MICP**（互动内容协议）
-3. 输入名称，（可选）上传 ZIP 包
-
-### 3. 制作自己的互动课件
-
-MICP 课件包是一个 ZIP 文件，内容结构如下：
-
-```
-my-lesson.zip
-├── index.html          # 主入口 — 互动内容页面
-├── micp-scoring.json   # 评分规则（可选；不提供时默认有互动就给 100 分）
-└── assets/             # 图片、音频、字体等资源
-```
-
-**`micp-scoring.json`** 示例：
-
-```json
-{
-  "rules": [
-    {
-      "id": "step1",
-      "label": "阅读导言",
-      "type": "interaction",
-      "check": { "event": "interaction", "data.step": 1 },
-      "weight": 1.0
-    },
-    {
-      "id": "step2",
-      "label": "完成练习",
-      "type": "interaction",
-      "check": { "event": "interaction", "data.action": "exercise_done" },
-      "weight": 1.0
-    }
-  ],
-  "scoring": {
-    "strategy": "all_or_nothing",
-    "passing_score": 50
-  }
-}
-```
-
-未提供 `micp-scoring.json` 时，服务器端规则为：**有任意一条互动记录得 100 分，否则得 0 分**。
-
----
-
-## 前端 SDK
-
-每个课件页面内均可使用全局对象 `window.MICP`：
-
-```javascript
-// 初始化（页面加载时自动调用）
-MICP.init();
-
-// 发送互动事件
-MICP.sendEvent('interaction', { step: 1, action: 'click' });
-
-// 提交课件 — 触发服务端评分 + 成绩册写入
-MICP.submit({ raw: { actions: [...] } });
-
-// 获取当前用户和活动上下文
-const ctx = MICP.getContext();
-// ctx.cmid, ctx.userid, ctx.courseid, ctx.sesskey
-```
-
-所有请求均自动携带 Moodle `sesskey`。
-
----
-
-## 架构说明
-
-```
-mod/micp/
-├── lib.php              # 核心：评分引擎、成绩册封装、文件解析
-├── view.php             # 活动页面（iframe 容器）
-├── file.php             # 插件文件访问（ZIP 包内文件服务）
-├── report.php           # 参与者成绩报告
-├── mod_form.php         # 活动设置表单
-├── micp.js              # 客户端 SDK
-├── db/
-│   ├── install.xml      # 数据库表结构（micp_events, micp_submissions）
-│   ├── services.php     # Moodle AJAX 服务
-│   └── access.php       # 权限定义
-├── classes/local/
-│   └── scoring_service.php  # 服务端评分逻辑
-├── sample_content/      # 内置示例课件
-└── lang/en/micp.php     # 语言字符串
-```
-
-### 评分流程
-
-```
-学生互动
-  → MICP.sendEvent() → AJAX → 写入 {micp_events}
-
-学生点击"完成"
-  → MICP.submit() → AJAX
-  → scoring_service::evaluate() 读取 micp-scoring.json 规则
-  → grade_update() 写入成绩册
-  → 返回 { score, rawgrade, details }
-```
-
----
-
-## 内置示例课件
-
-`generated/` 目录下包含三个可直接上传使用的课件包：
-
-| 课件包 | 说明 |
+| 文件 | 主题 |
 |---|---|
-| `audio-digitization-micp/` | 英语版 — 声音数字化基础，共 33 个互动节点 |
-| `audio-digitization-micp-zh/` | 中文版 — 同上内容，中文语言 |
-| `photosynthesis-micp/` | 英语版 — 光合作用，渐进式披露设计 |
+| `generated/photosynthesis-micp.zip` | 光合作用 — 渐进式步骤设计 |
+| `generated/audio-digitization-micp.zip` | 声音数字化 — 33 个互动节点（英文） |
+| `generated/audio-digitization-micp-zh.zip` | 同上，中文版 |
 
-ZIP 文件已预构建，可直接上传：
-- `generated/audio-digitization-micp.zip`
-- `generated/audio-digitization-micp-zh.zip`
-- `generated/photosynthesis-micp.zip`
+### 第三步：用 AI Skill 生成你自己的课件
+
+本仓库附带了 **`micp-html-authoring`** — 一个 AI Agent Skill，专Knowhow 如何构建 mod_micp 课件包。
+
+**OpenCode Agent 触发词：**
+```
+"Create a MICP lesson about [你教的主题]"
+```
+
+AI 会自动生成：
+- `index.html` — 互动课件页面
+- `micp-scoring.json` — 服务器评分规则
+- `assets/` — 打包好的 JS 运行时
+
+ZIP 打包 → 上传到 mod_micp → 学生获得一套自动评分的互动课件。
+
+详细文档：[`.skills/micp-html-authoring/SKILL.md`](.skills/micp-html-authoring/SKILL.md)
 
 ---
 
-## 安全模型
+## 你得到什么
 
-- 所有写入操作均需 `require_login()` + `require_sesskey()`
-- `userid` 始终从服务器会话读取，绝不信任客户端提交
-- `score` 由服务端计算，客户端无法伪造成绩
-- 重复提交覆盖旧成绩（幂等操作）
-
----
-
-## 权限定义
-
-| 权限 | 默认角色 | 说明 |
+| | 传统方式 | mod_micp + AI Skill |
 |---|---|---|
-| `mod/micp:addinstance` | 教师 | 创建/编辑 MICP 活动 |
-| `mod/micp:view` | 学生 | 查看活动并进行互动 |
-| `mod/micp:submit` | 学生 | 提交课件并获取成绩 |
-| `mod/micp:viewreports` | 教师 | 查看参与者成绩报告 |
+| 制作一个课件 | 数小时 | ~30 秒（AI 生成） |
+| 评分 | 手动批改 | 自动 → gradebook |
+| 课件类型 | 固定模板 | 任意 HTML 互动设计 |
+| 维护 | 逐个学生反馈 | 服务端评分 |
 
 ---
 
-## AI 辅助课件制作（本仓库配套 Skill）
+## 为什么做这个
 
-本仓库附带了 AI Agent Skill，可配合 [OpenCode](https://opencode.dev/) 或兼容 AI Agent 使用，快速生成 mod_micp 互动课件包。
+教师不应该是模板工人，而应该是课程设计师。
 
-> ⚠️ 此 Skill **不是** Moodle 插件，是指导 AI 生成课件内容的指令集，需要 AI Agent 环境才能运行。
-
-**Skill 位置：** `.skills/micp-html-authoring/SKILL.md`
-
-**快速触发词（OpenCode）：**
-
-```
-"帮我制作一个关于[主题]的 MICP 互动课件"
-```
-
-AI 会根据 Skill 指引自动生成 `index.html` + `micp-scoring.json`，输出可直接上传到 mod_micp 的 ZIP 包。详细规范见 `.skills/micp-html-authoring/SKILL.md`。
-
----
-
-## 扩展性
-
-评分引擎采用可插拔设计，替换 `classes/local/scoring_service.php` 中的 `$this->evaluator` 即可切换评分策略：
-
-- 内置：`AllOrNothingEvaluator`（全有或全无）、`ProportionalEvaluator`（按比例）
-- 未来可扩展：AI 评分器、Python 脚本评分器
+mod_micp 分离了关注点：
+- **你**决定学生应该经历什么、学到什么
+- **AI**构建互动页面
+- **插件**可靠地、大规模地推送和评分
 
 ---
 
 ## 开源许可
 
-GPLv3 — 与 Moodle 本身采用相同许可。
+GPLv3
 
 ---
+
+## 技术文档
+
+<details>
+<summary>点击展开 — 完整技术细节</summary>
+
+### 课件包结构
+
+```
+my-lesson.zip
+├── index.html          # 互动 HTML（AI 生成）
+├── micp-scoring.json   # 评分规则
+└── assets/
+    └── micp.js         # 必需的运行时
+```
+
+### `micp-scoring.json`（由 AI 生成）
+
+```json
+{
+  "rules": [
+    {
+      "id": "q1_choice",
+      "label": "第一题",
+      "check": { "event": "interaction", "scoring": { "correct": "a" } }
+    }
+  ],
+  "scoring": { "strategy": "all_or_nothing" }
+}
+```
+
+不提供此文件时：**有任意一条互动记录得 100 分，否则 0 分**。
+
+### 客户端 SDK
+
+```javascript
+MICP.init();                                           // 页面加载时自动调用
+MICP.sendEvent('interaction', { interactionid: '...', response: '...', outcome: '...' });
+MICP.submit({ raw: { actions: actions } });            // 点击提交按钮时
+const ctx = MICP.getContext();                         // { cmid, userid, sesskey, ... }
+```
+
+### 评分策略
+
+- `all_or_nothing` — 全部规则满足 = 100 分，否则 0 分
+- `proportional` — 按规则权重给部分分
+
+### 权限定义
+
+| 权限 | 默认角色 | 说明 |
+|---|---|---|
+| `mod/micp:addinstance` | 教师 | 创建/编辑活动 |
+| `mod/micp:view` | 学生 | 查看和互动 |
+| `mod/micp:submit` | 学生 | 提交并获得成绩 |
+| `mod/micp:viewreports` | 教师 | 查看成绩报告 |
+
+### 架构
+
+```
+mod/micp/
+├── lib.php                 # 评分引擎、gradebook 封装
+├── view.php                # 活动页面（iframe 容器）
+├── file.php                # 插件文件访问（课件资源服务）
+├── report.php              # 参与者成绩报告
+├── micp.js                 # 客户端 SDK
+├── db/install.xml          # 数据表：micp_events, micp_submissions
+├── db/services.php         # Moodle AJAX 接口
+├── classes/local/
+│   └── scoring_service.php  # 服务端评分逻辑
+└── lang/en/micp.php
+```
+
+</details>
 
 ## 更新日志
 
