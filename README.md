@@ -2,113 +2,69 @@
 
 [**中文版**](./README_zh.md)
 
-**mod_micp** is a Moodle activity module that delivers AI-generated interactive HTML lessons and records student scores directly into the Moodle gradebook.
+**AI-first interactive HTML lessons for Moodle — authored by AI, graded by the server.**
 
 ---
 
-## What It Does
+## Create a Lesson in 30 Seconds
 
-1. Teachers create a **mod_micp** activity and upload a ZIP package (or pick a built-in demo)
-2. Students open the activity, interact with the embedded HTML content
-3. Every interaction is sent to the server via `MICP.sendEvent()`
-4. On completion, `MICP.submit()` triggers server-side scoring
-5. The final score is written to the Moodle gradebook via the official `grade_update()` API
+Install the plugin, then tell the AI what you want:
 
-The plugin is a **universal interaction framework** — it is not tied to any specific question type. Any HTML-based interactive experience can be plugged in.
+```
+"Create a MICP lesson about [any topic]"
+```
 
----
-
-## Requirements
-
-- **Moodle 5.x** (verified against Moodle 5.0.dev)
-- PHP 8.1+
+The bundled **micp-html-authoring** Skill (`.skills/micp-html-authoring/SKILL.md`) tells any AI agent how to generate a complete mod_micp package: interactive `index.html` + server-side `micp-scoring.json`. Upload the ZIP to Moodle and students get a self-grading interactive lesson — no manual authoring required.
 
 ---
 
-## Quick Start
-
-### 1. Install the plugin
-
-Copy the `mod/micp/` directory into your Moodle's `mod/` directory:
+## Install
 
 ```bash
 cp -r mod/micp /path/to/your/moodle/mod/
 ```
-
-Then visit **Site Administration → Notifications** to trigger the database installation.
-
-### 2. Create an activity
-
-1. Enable editing on any course page
-2. Click **Add an activity** → select **MICP** (Interactive Content Protocol)
-3. Give it a name and (optionally) upload a ZIP package
-
-### 3. Bundle your own interactive lesson
-
-A MICP lesson package is a ZIP containing:
-
-```
-my-lesson.zip
-├── index.html          # Main entry — the interactive experience
-├── micp-scoring.json   # Scoring rules (optional; defaults to 100 if absent)
-└── assets/             # Images, audio, fonts, etc.
-```
-
-**`micp-scoring.json`** example:
-
-```json
-{
-  "rules": [
-    {
-      "id": "step1",
-      "label": "Read the introduction",
-      "type": "interaction",
-      "check": { "event": "interaction", "data.step": 1 },
-      "weight": 1.0
-    },
-    {
-      "id": "step2",
-      "label": "Complete the exercise",
-      "type": "interaction",
-      "check": { "event": "interaction", "data.action": "exercise_done" },
-      "weight": 1.0
-    }
-  ],
-  "scoring": {
-    "strategy": "all_or_nothing",
-    "passing_score": 50
-  }
-}
-```
-
-Without `micp-scoring.json`, the server returns **100 if any interaction was recorded, 0 otherwise**.
+Visit **Site Administration → Notifications** to install. Requires **Moodle 5.x**, PHP 8.1+.
 
 ---
 
-## Frontend SDK
+## Use a Built-in Sample (Zero Authoring)
 
-Inside every lesson page, the global `window.MICP` object is available:
+Three ready-to-upload packages are included:
 
-```javascript
-// Initialize (called automatically on page load)
-MICP.init();
+| File | Topic |
+|---|---|
+| `generated/photosynthesis-micp.zip` | Photosynthesis — progressive disclosure design |
+| `generated/audio-digitization-micp.zip` | Audio digitization — 33 interaction nodes (EN) |
+| `generated/audio-digitization-micp-zh.zip` | Same, Chinese language |
 
-// Send an interaction event
-MICP.sendEvent('interaction', { step: 1, action: 'click' });
-
-// Submit the lesson — triggers server-side scoring + gradebook write
-MICP.submit({ raw: { actions: [...] } });
-
-// Read the current user/cmid context
-const ctx = MICP.getContext();
-// ctx.cmid, ctx.userid, ctx.courseid, ctx.sesskey
-```
-
-All requests include the Moodle `sesskey` automatically.
+Upload any `.zip` when creating a MICP activity in your course. Students interact → server grades → score writes to gradebook automatically.
 
 ---
 
-## Architecture
+## What mod_micp Does
+
+1. Teacher uploads a ZIP lesson package (or picks a built-in demo)
+2. Student opens the activity, interacts with the HTML
+3. Every interaction is recorded server-side via `MICP.sendEvent()`
+4. Student clicks "Done" → `MICP.submit()` triggers scoring
+5. Score writes to Moodle gradebook via official `grade_update()` API
+
+Not a quiz type — a **universal interaction framework**. Any HTML-based experience works.
+
+---
+
+## License
+
+GPLv3
+
+---
+
+## Documentation
+
+<details>
+<summary>Click to expand — full technical documentation</summary>
+
+### Architecture
 
 ```
 mod/micp/
@@ -124,7 +80,6 @@ mod/micp/
 │   └── access.php       # Capabilities
 ├── classes/local/
 │   └── scoring_service.php  # Server-side scoring logic
-├── sample_content/      # Built-in demo lesson
 └── lang/en/micp.php     # Language strings
 ```
 
@@ -132,92 +87,105 @@ mod/micp/
 
 ```
 Student interacts
-  → MICP.sendEvent() → /mod/micp/api/event.php (AJAX)
-  → stored in {micp_events}
+  → MICP.sendEvent() → stored in {micp_events}
 
 Student clicks "Done"
-  → MICP.submit() → /mod/micp/api/submit.php (AJAX)
-  → scoring_service::evaluate() reads micp-scoring.json
+  → MICP.submit() → scoring_service::evaluate() reads micp-scoring.json
   → grade_update() writes to gradebook
   → returns { score, rawgrade, details }
 ```
 
----
+### Client SDK (`window.MICP`)
 
-## Built-in Sample Lessons
+```javascript
+// Initialize (called automatically on page load)
+MICP.init();
 
-Two ready-to-use lesson packages are included in `generated/`:
+// Send an interaction event
+MICP.sendEvent('interaction', {
+  interactionid: 'q1_choice',
+  response: 'a',
+  outcome: 'selected',
+  sequence: 1,
+});
 
-| Package | Description |
-|---|---|
-| `audio-digitization-micp/` | English — Audio digitization fundamentals, 33 interaction nodes |
-| `audio-digitization-micp-zh/` | 中文 — Same content, Chinese language |
-| `photosynthesis-micp/` | English — Photosynthesis, progressive disclosure design |
+// Submit — triggers server-side scoring + gradebook write
+MICP.submit({ raw: { actions: actions } });
 
-ZIP files are pre-built and ready for upload:
-- `generated/audio-digitization-micp.zip`
-- `generated/audio-digitization-micp-zh.zip`
-- `generated/photosynthesis-micp.zip`
+// Read current user/cmid context
+const ctx = MICP.getContext();
+// ctx.cmid, ctx.userid, ctx.courseid, ctx.sesskey
+```
 
----
+All requests include the Moodle `sesskey` automatically. **The client never computes a score.**
 
-## Security Model
+### Lesson Package Structure
 
-- All write operations require `require_login()` + `require_sesskey()`
-- `userid` is always read from the server session, never trusted from the client
-- `score` is computed server-side; the client cannot forge a grade
+A MICP lesson is a ZIP:
+
+```
+my-lesson.zip
+├── index.html          # Interactive experience
+├── micp-scoring.json   # Server-side grading rules
+└── assets/
+    └── micp.js         # Required; copy from .skills/micp-html-authoring/references/assets/
+```
+
+### `micp-scoring.json` Example
+
+```json
+{
+  "rules": [
+    {
+      "id": "q1_choice",
+      "label": "Question 1",
+      "check": { "event": "interaction", "scoring": { "correct": "a" } }
+    },
+    {
+      "id": "q2_reflect",
+      "label": "Reflection",
+      "check": { "event": "interaction", "scoring": { "requireNonEmpty": true } }
+    }
+  ],
+  "scoring": {
+    "strategy": "all_or_nothing",
+    "passing_score": 50
+  }
+}
+```
+
+Scoring strategies: `all_or_nothing` (all rules complete = 100, else 0) or `proportional` (partial credit by weight).
+
+Without `micp-scoring.json`, the server returns **100 if any interaction was recorded, 0 otherwise**.
+
+### Security
+
+- All write ops require `require_login()` + `require_sesskey()`
+- `userid` always read from server session — never trusted from client
+- `score` always computed server-side — client cannot forge a grade
 - Repeated submissions overwrite the previous score (idempotent)
 
----
-
-## Capabilities
+### Capabilities
 
 | Capability | Default | Description |
 |---|---|---|
 | `mod/micp:addinstance` | teacher | Create/edit MICP activities |
-| `mod/micp:view` | student | View the activity and interact |
+| `mod/micp:view` | student | View and interact |
 | `mod/micp:submit` | student | Submit and receive a score |
-| `mod/micp:viewreports` | teacher | View the participant report |
+| `mod/micp:viewreports` | teacher | View participant report |
 
----
+### Extensibility
 
-## AI Lesson Authoring Skill
+The scoring engine is pluggable. Replace `$this->evaluator` in `classes/local/scoring_service.php`:
 
-This repository includes a bundled Skill for AI-assisted lesson authoring. Use it with [OpenCode](https://opencode.dev/) or any compatible AI agent.
+- `AllOrNothingEvaluator` — default
+- `ProportionalEvaluator` — partial credit
+- Future: AI evaluator, Python script evaluator
 
-> The Skill is **not** a Moodle plugin — it is an instruction set that tells an AI how to generate `index.html` + `micp-scoring.json` lesson packages for mod_micp.
-
-**Skill location:** `.skills/micp-html-authoring/SKILL.md`
-
-**Quick trigger (OpenCode):**
-
-```
-"帮我制作一个关于[主题]的 MICP 互动课件"
-```
-
-The agent will produce a ready-to-upload ZIP package with full interactive HTML and server-side grading rules. See `.skills/micp-html-authoring/SKILL.md` for full authoring documentation.
-
----
-
-## Extensibility
-
-The scoring engine is pluggable:
-
-```php
-// In classes/local/scoring_service.php
-// Swap the evaluator by replacing $this->evaluator
-// Built-in: AllOrNothingEvaluator, ProportionalEvaluator
-// Future: AI evaluator, Python script evaluator
-```
-
----
-
-## License
-
-GPLv3 — same as Moodle itself.
+</details>
 
 ---
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) for version history.
+See [CHANGELOG.md](./CHANGELOG.md).
