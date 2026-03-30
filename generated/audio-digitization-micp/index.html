@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>From Air Vibrations to Audio Files</title>
+  <style>
+    :root {
+      --font-display: "Trebuchet MS", "Gill Sans", sans-serif;
+      --font-body: "Segoe UI", "Helvetica Neue", sans-serif;
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
+      --space-7: 3rem;
+      --radius-sm: 0.5rem;
+      --radius-md: 1rem;
+      --radius-lg: 1.5rem;
+      --shadow-soft: 0 1.25rem 2.5rem rgba(3, 10, 28, 0.18);
+      --shadow-glow: 0 0 0 1px rgba(143, 234, 255, 0.18), 0 1.5rem 3rem rgba(7, 13, 35, 0.38);
+      --duration-fast: 180ms;
+      --duration-medium: 320ms;
+      --ease-standard: ease;
+      --color-ink: #ebf5ff;
+      --color-muted: #9cb7cf;
+      --color-panel: rgba(9, 17, 40, 0.84);
+      --color-panel-strong: rgba(7, 12, 30, 0.95);
+      --color-line: rgba(150, 201, 255, 0.2);
+      --color-line-strong: rgba(150, 201, 255, 0.44);
+      --color-accent: #8feaff;
+      --color-accent-strong: #4fc3ff;
+      --color-secondary: #ffbf69;
+      --color-success: #7fffd4;
+      --color-danger: #ff8f8f;
+      --color-analog: #7fffd4;
+      --color-sample: #ffd166;
+      --color-quantized: #ff8ad6;
+      --color-binary: #b9a0ff;
+      --color-processed: #8feaff;
+      --bg-page: radial-gradient(circle at top left, rgba(79, 195, 255, 0.18), transparent 28%), radial-gradient(circle at top right, rgba(255, 191, 105, 0.16), transparent 30%), linear-gradient(160deg, #050816 0%, #0b1430 48%, #050816 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      background: var(--bg-page);
+      color: var(--color-ink);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.2;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.25) 0.06rem, transparent 0.06rem);
+      background-size: 1.2rem 1.2rem;
+      mix-blend-mode: soft-light;
+    }
+
+    main {
+      width: min(78rem, calc(100% - (var(--space-5) * 2)));
+      margin: 0 auto;
+      padding: var(--space-7) 0 var(--space-7);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.8fr);
+      gap: var(--space-6);
+      align-items: stretch;
+      margin-bottom: var(--space-6);
+    }
+
+    .panel,
+    .step,
+    .sticky-panel {
+      background: var(--color-panel);
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(1rem);
+    }
+
+    .hero-copy {
+      padding: var(--space-6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      inset: auto -12% -26% auto;
+      width: 16rem;
+      height: 16rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(143, 234, 255, 0.2), transparent 70%);
+    }
+
+    .eyebrow,
+    .badge,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: 999px;
+      border: 1px solid var(--color-line-strong);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--color-muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: var(--font-display);
+      letter-spacing: 0.02em;
+      line-height: 1.08;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 4.6rem);
+      margin-top: var(--space-4);
+      margin-bottom: var(--space-4);
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 2vw, 2.25rem);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+    }
+
+    p {
+      color: var(--color-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .metric {
+      padding: var(--space-4);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--color-line);
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--color-ink);
+      font-size: 1.2rem;
+      margin-bottom: var(--space-2);
+    }
+
+    .hero-visual {
+      padding: var(--space-5);
+      display: grid;
+      gap: var(--space-4);
+      align-content: center;
+    }
+
+    .signal-card {
+      padding: var(--space-4);
+      border-radius: var(--radius-md);
+      background: var(--color-panel-strong);
+      border: 1px solid var(--color-line);
+    }
+
+    .signal-stage {
+      display: grid;
+      gap: var(--space-4);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .signal-mini {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .signal-mini svg {
+      width: 100%;
+      height: 5rem;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--color-line);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    .steps {
+      display: grid;
+      gap: var(--space-5);
+    }
+
+    .step {
+      padding: var(--space-5);
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--duration-medium) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard);
+    }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0.45rem;
+      background: linear-gradient(180deg, var(--color-accent), transparent);
+      opacity: 0.9;
+    }
+
+    .step.locked {
+      opacity: 0.42;
+    }
+
+    .step.unlocked {
+      border-color: var(--color-line-strong);
+    }
+
+    .step.completed {
+      transform: translateY(-0.15rem);
+      border-color: rgba(127, 255, 212, 0.4);
+    }
+
+    .step-head {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-4);
+      align-items: start;
+      margin-bottom: var(--space-4);
+    }
+
+    .step-index {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      color: var(--color-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-2);
+    }
+
+    .status-pill {
+      white-space: nowrap;
+      border-radius: 999px;
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--color-line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--color-muted);
+      font-size: 0.85rem;
+    }
+
+    .step-grid,
+    .process-grid,
+    .binary-grid {
+      display: grid;
+      gap: var(--space-4);
+      grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+      align-items: start;
+    }
+
+    .viz-card,
+    .info-card,
+    .choice-card,
+    .control-card,
+    .callout,
+    .summary-box,
+    .status-box,
+    .sticky-panel {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .viz-card,
+    .info-card,
+    .control-card,
+    .callout,
+    .summary-box,
+    .status-box {
+      padding: var(--space-4);
+    }
+
+    .canvas-wrap {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--color-line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .legend,
+    .option-grid,
+    .toggle-row,
+    .sample-buttons,
+    .progress-list,
+    .bullet-list {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .legend {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: var(--space-4);
+    }
+
+    .legend-item,
+    .binary-chip {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--color-muted);
+      font-size: 0.92rem;
+    }
+
+    .swatch {
+      width: 0.9rem;
+      height: 0.9rem;
+      border-radius: 999px;
+      flex: none;
+    }
+
+    .swatch-analog { background: var(--color-analog); }
+    .swatch-sample { background: var(--color-sample); }
+    .swatch-quantized { background: var(--color-quantized); }
+    .swatch-binary { background: var(--color-binary); }
+    .swatch-processed { background: var(--color-processed); }
+
+    .control-card {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    label {
+      color: var(--color-ink);
+      font-size: 0.95rem;
+      display: block;
+    }
+
+    input[type="range"],
+    textarea {
+      width: 100%;
+    }
+
+    input[type="range"] {
+      accent-color: var(--color-accent-strong);
+    }
+
+    textarea {
+      min-height: 9rem;
+      resize: vertical;
+      padding: var(--space-4);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-line-strong);
+      background: rgba(7, 12, 30, 0.8);
+      color: var(--color-ink);
+      font: inherit;
+      line-height: 1.6;
+    }
+
+    .button-row,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 0.85rem 1.15rem;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard);
+    }
+
+    button:hover,
+    button:focus-visible {
+      transform: translateY(-0.08rem);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+      color: #02121c;
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--color-line-strong);
+      color: var(--color-ink);
+    }
+
+    button.ghost {
+      background: transparent;
+      border-color: var(--color-line);
+      color: var(--color-muted);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .option-grid {
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      margin-top: var(--space-4);
+    }
+
+    .option-button,
+    .sample-button {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--color-line);
+      color: var(--color-ink);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      min-height: 100%;
+    }
+
+    .option-button strong,
+    .sample-button strong,
+    .stat strong,
+    .code-display strong,
+    .status-box strong {
+      display: block;
+      margin-bottom: var(--space-2);
+      color: var(--color-ink);
+    }
+
+    .option-button[data-state="correct"],
+    .sample-button.active {
+      border-color: rgba(127, 255, 212, 0.48);
+      background: rgba(127, 255, 212, 0.08);
+    }
+
+    .option-button[data-state="wrong"] {
+      border-color: rgba(255, 143, 143, 0.5);
+      background: rgba(255, 143, 143, 0.08);
+    }
+
+    .feedback {
+      min-height: 1.5rem;
+      color: var(--color-muted);
+      font-size: 0.95rem;
+    }
+
+    .stat-grid,
+    .bit-display,
+    .summary-points {
+      display: grid;
+      gap: var(--space-3);
+      grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    }
+
+    .stat,
+    .bit-box {
+      padding: var(--space-3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sample-buttons {
+      grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+      margin-top: var(--space-3);
+    }
+
+    .sample-button {
+      padding: var(--space-3);
+      text-align: center;
+    }
+
+    .code-display {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .binary-string {
+      display: inline-flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .binary-chip {
+      justify-content: center;
+      padding: var(--space-2) var(--space-3);
+      min-width: 2.25rem;
+      border-radius: var(--radius-sm);
+      background: rgba(185, 160, 255, 0.12);
+      color: var(--color-ink);
+      border: 1px solid rgba(185, 160, 255, 0.35);
+      font-weight: 700;
+    }
+
+    .process-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .status-box,
+    .callout {
+      color: var(--color-muted);
+    }
+
+    .status-box.ok {
+      border-color: rgba(127, 255, 212, 0.42);
+      background: rgba(127, 255, 212, 0.08);
+    }
+
+    .status-box.error {
+      border-color: rgba(255, 143, 143, 0.42);
+      background: rgba(255, 143, 143, 0.08);
+    }
+
+    .sticky-panel {
+      position: sticky;
+      top: var(--space-5);
+      padding: var(--space-5);
+      display: grid;
+      gap: var(--space-4);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .progress-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .progress-list li {
+      display: grid;
+      gap: var(--space-1);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--color-line);
+      color: var(--color-muted);
+    }
+
+    .progress-list li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .progress-list strong {
+      color: var(--color-ink);
+      font-size: 0.96rem;
+    }
+
+    .progress-list span.complete {
+      color: var(--color-success);
+    }
+
+    .progress-list span.active {
+      color: var(--color-secondary);
+    }
+
+    .progress-list span.locked {
+      color: var(--color-muted);
+    }
+
+    .action-log {
+      max-height: 18rem;
+      overflow: auto;
+      padding: var(--space-4);
+      margin: 0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-line);
+      background: rgba(7, 12, 30, 0.75);
+      color: var(--color-muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .submit-panel {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 70rem) {
+      .hero,
+      .layout,
+      .step-grid,
+      .binary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sticky-panel {
+        position: static;
+      }
+
+      .process-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 48rem) {
+      main {
+        width: min(100% - (var(--space-4) * 2), 78rem);
+        padding-top: var(--space-5);
+      }
+
+      .hero-grid,
+      .signal-stage,
+      .legend {
+        grid-template-columns: 1fr;
+      }
+
+      .step,
+      .hero-copy,
+      .hero-visual,
+      .sticky-panel {
+        padding: var(--space-4);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="panel hero-copy">
+        <span class="eyebrow">MICP interactive lesson package</span>
+        <h1>How sound becomes data you can store and edit</h1>
+        <p>
+          Sound starts as smooth pressure changes in air. To make it editable by a computer, we sample the wave,
+          round each measurement into a level, encode those levels in binary, and then process the stored numbers.
+        </p>
+        <div class="hero-grid">
+          <div class="metric">
+            <strong>6 stages</strong>
+            <span>Progressive reveal from analog motion to digital editing.</span>
+          </div>
+          <div class="metric">
+            <strong>5 visual labs</strong>
+            <span>Waveform, sampling, quantization, binary encoding, and filtering.</span>
+          </div>
+          <div class="metric">
+            <strong>1 synthesis</strong>
+            <span>Explain the whole chain in your own words before submitting.</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel hero-visual" aria-label="Signal journey overview">
+        <div class="signal-card">
+          <span class="badge">Signal journey</span>
+          <div class="signal-stage" style="margin-top: var(--space-4);">
+            <div class="signal-mini">
+              <strong>Analog</strong>
+              <svg viewBox="0 0 120 60" role="img" aria-label="Analog waveform">
+                <path d="M0 34 C10 6, 18 6, 28 34 S46 62, 58 31 S74 5, 86 29 S104 59, 120 34" fill="none" stroke="var(--color-analog)" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="signal-mini">
+              <strong>Sampled</strong>
+              <svg viewBox="0 0 120 60" role="img" aria-label="Sampled waveform">
+                <path d="M0 34 C10 6, 18 6, 28 34 S46 62, 58 31 S74 5, 86 29 S104 59, 120 34" fill="none" stroke="rgba(127,255,212,0.25)" stroke-width="2"/>
+                <g fill="var(--color-sample)">
+                  <circle cx="12" cy="21" r="3"/><circle cx="28" cy="34" r="3"/><circle cx="44" cy="48" r="3"/><circle cx="60" cy="31" r="3"/><circle cx="76" cy="18" r="3"/><circle cx="92" cy="29" r="3"/><circle cx="108" cy="41" r="3"/>
+                </g>
+              </svg>
+            </div>
+            <div class="signal-mini">
+              <strong>Binary</strong>
+              <svg viewBox="0 0 120 60" role="img" aria-label="Binary storage blocks">
+                <rect x="10" y="14" width="18" height="32" rx="4" fill="rgba(185,160,255,0.18)" stroke="var(--color-binary)"/>
+                <rect x="34" y="14" width="18" height="32" rx="4" fill="rgba(185,160,255,0.18)" stroke="var(--color-binary)"/>
+                <rect x="58" y="14" width="18" height="32" rx="4" fill="rgba(185,160,255,0.18)" stroke="var(--color-binary)"/>
+                <text x="19" y="35" text-anchor="middle" fill="var(--color-ink)" font-size="16">1</text>
+                <text x="43" y="35" text-anchor="middle" fill="var(--color-ink)" font-size="16">0</text>
+                <text x="67" y="35" text-anchor="middle" fill="var(--color-ink)" font-size="16">1</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <p>
+          Every activity below reveals one more transformation step. Explore each visualization, answer the checkpoint,
+          and the next concept unlocks.
+        </p>
+      </aside>
+    </section>
+
+    <div class="layout">
+      <section class="steps" aria-label="Interactive lesson steps">
+        <section class="step unlocked" id="step-1" data-step="1">
+          <div class="step-head">
+            <div>
+              <div class="step-index">Step 1</div>
+              <h2>Analog sound is continuous</h2>
+            </div>
+            <div class="status-pill" id="status-step-1">Ready</div>
+          </div>
+          <div class="step-grid">
+            <div class="viz-card">
+              <div class="canvas-wrap">
+                <canvas id="analog-canvas" width="880" height="260" aria-label="Analog waveform canvas"></canvas>
+              </div>
+              <div class="legend">
+                <div class="legend-item"><span class="swatch swatch-analog"></span><span>Continuous waveform</span></div>
+                <div class="legend-item"><span class="swatch swatch-sample"></span><span>Sample markers appear later</span></div>
+                <div class="legend-item"><span class="swatch swatch-processed"></span><span>Processed wave appears near the end</span></div>
+              </div>
+            </div>
+            <div class="info-card">
+              <h3>What you are seeing</h3>
+              <p>
+                A microphone tracks air pressure over time. The wave does not jump from box to box. It bends smoothly,
+                which is why the computer needs a strategy to capture snapshots of it.
+              </p>
+              <div class="callout" id="analog-callout" style="margin-top: var(--space-4);">
+                Reveal the explanation to confirm that analog sound is a continuously varying signal.
+              </div>
+              <div class="button-row" style="margin-top: var(--space-4);">
+                <button type="button" class="primary" id="reveal-analog">Reveal analog story</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step locked" id="step-2" data-step="2">
+          <div class="step-head">
+            <div>
+              <div class="step-index">Step 2</div>
+              <h2>Sampling turns a smooth wave into snapshots</h2>
+            </div>
+            <div class="status-pill" id="status-step-2">Locked</div>
+          </div>
+          <div class="step-grid">
+            <div class="viz-card">
+              <div class="canvas-wrap">
+                <canvas id="sampling-canvas" width="880" height="300" aria-label="Sampling visualization"></canvas>
+              </div>
+              <div class="control-card" style="margin-top: var(--space-4);">
+                <label for="sample-slider">Sampling density: <strong id="sample-slider-value">14</strong> snapshots across the same wave</label>
+                <input type="range" id="sample-slider" min="6" max="36" step="1" value="14">
+                <div class="button-row">
+                  <button type="button" class="secondary" id="freeze-samples">Freeze these sampling points</button>
+                </div>
+              </div>
+            </div>
+            <div class="info-card">
+              <h3>Checkpoint</h3>
+              <p>
+                Try a low and a high sample count. Then choose which option best preserves the shape of the original wave.
+              </p>
+              <div class="option-grid" id="sampling-options">
+                <button type="button" class="option-button" data-group="sampling" data-id="sampling_rate_choice" data-response="low">
+                  <strong>Low density</strong>
+                  Too few samples capture only a rough outline.
+                </button>
+                <button type="button" class="option-button" data-group="sampling" data-id="sampling_rate_choice" data-response="medium">
+                  <strong>Medium density</strong>
+                  Better, but still misses some fast changes.
+                </button>
+                <button type="button" class="option-button" data-group="sampling" data-id="sampling_rate_choice" data-response="high">
+                  <strong>High density</strong>
+                  More snapshots preserve the wave much more faithfully.
+                </button>
+              </div>
+              <div class="feedback" id="sampling-feedback"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step locked" id="step-3" data-step="3">
+          <div class="step-head">
+            <div>
+              <div class="step-index">Step 3</div>
+              <h2>Quantization rounds each sample into levels</h2>
+            </div>
+            <div class="status-pill" id="status-step-3">Locked</div>
+          </div>
+          <div class="step-grid">
+            <div class="viz-card">
+              <div class="canvas-wrap">
+                <canvas id="quantization-canvas" width="880" height="300" aria-label="Quantization visualization"></canvas>
+              </div>
+              <div class="control-card" style="margin-top: var(--space-4);">
+                <label for="bit-slider">Bit depth: <strong id="bit-slider-value">3</strong> bits</label>
+                <input type="range" id="bit-slider" min="2" max="5" step="1" value="3">
+                <div class="stat-grid">
+                  <div class="stat"><strong id="level-count">8 levels</strong><span>More bits create more available vertical steps.</span></div>
+                  <div class="stat"><strong id="step-size">Large rounding step</strong><span>Smaller steps reduce quantization error.</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="info-card">
+              <h3>Checkpoint</h3>
+              <p>
+                Each added bit doubles the number of possible levels. Which bit depth gives <strong>32</strong> quantization levels?
+              </p>
+              <div class="option-grid" id="quantization-options">
+                <button type="button" class="option-button" data-group="quantization" data-id="quantization_bits_choice" data-response="3">
+                  <strong>3 bits</strong>
+                  That gives 8 levels.
+                </button>
+                <button type="button" class="option-button" data-group="quantization" data-id="quantization_bits_choice" data-response="4">
+                  <strong>4 bits</strong>
+                  That gives 16 levels.
+                </button>
+                <button type="button" class="option-button" data-group="quantization" data-id="quantization_bits_choice" data-response="5">
+                  <strong>5 bits</strong>
+                  That gives 32 levels.
+                </button>
+              </div>
+              <div class="feedback" id="quantization-feedback"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step locked" id="step-4" data-step="4">
+          <div class="step-head">
+            <div>
+              <div class="step-index">Step 4</div>
+              <h2>Those quantized levels are stored in binary</h2>
+            </div>
+            <div class="status-pill" id="status-step-4">Locked</div>
+          </div>
+          <div class="binary-grid">
+            <div class="viz-card">
+              <h3>Sample-to-code explorer</h3>
+              <p>Select a stored sample to inspect its decimal level and binary representation.</p>
+              <div class="sample-buttons" id="sample-buttons"></div>
+              <div class="code-display" style="margin-top: var(--space-4);">
+                <div class="summary-box">
+                  <strong id="binary-sample-label">Sample 1</strong>
+                  <span id="binary-sample-value">Quantized level 5 out of 7</span>
+                </div>
+                <div class="bit-display" id="binary-bits"></div>
+              </div>
+            </div>
+            <div class="info-card">
+              <h3>Checkpoint</h3>
+              <p>
+                In a 3-bit system, which code stores decimal level <strong>5</strong>?
+              </p>
+              <div class="option-grid" id="binary-options">
+                <button type="button" class="option-button" data-group="binary" data-id="binary_code_choice" data-response="101">
+                  <strong>101</strong>
+                  1×4 + 0×2 + 1×1 = 5.
+                </button>
+                <button type="button" class="option-button" data-group="binary" data-id="binary_code_choice" data-response="110">
+                  <strong>110</strong>
+                  This is decimal 6.
+                </button>
+                <button type="button" class="option-button" data-group="binary" data-id="binary_code_choice" data-response="011">
+                  <strong>011</strong>
+                  This is decimal 3.
+                </button>
+              </div>
+              <div class="feedback" id="binary-feedback"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step locked" id="step-5" data-step="5">
+          <div class="step-head">
+            <div>
+              <div class="step-index">Step 5</div>
+              <h2>Digital processing manipulates the stored numbers</h2>
+            </div>
+            <div class="status-pill" id="status-step-5">Locked</div>
+          </div>
+          <div class="step-grid">
+            <div class="viz-card">
+              <div class="process-grid">
+                <div class="canvas-wrap">
+                  <canvas id="processing-input-canvas" width="420" height="220" aria-label="Original digital samples"></canvas>
+                </div>
+                <div class="canvas-wrap">
+                  <canvas id="processing-output-canvas" width="420" height="220" aria-label="Processed digital samples"></canvas>
+                </div>
+              </div>
+              <div class="control-card" style="margin-top: var(--space-4);">
+                <label for="gain-slider">Gain multiplier: <strong id="gain-slider-value">1.2×</strong></label>
+                <input type="range" id="gain-slider" min="6" max="18" step="1" value="12">
+                <label for="smoothing-slider">Smoothing window: <strong id="smoothing-slider-value">3</strong> samples</label>
+                <input type="range" id="smoothing-slider" min="1" max="6" step="1" value="3">
+              </div>
+            </div>
+            <div class="info-card">
+              <h3>Checkpoint</h3>
+              <p>
+                Gain makes the wave taller. Smoothing averages neighboring samples. Which operation mainly removes rapid zig-zag variation?
+              </p>
+              <div class="option-grid" id="processing-options">
+                <button type="button" class="option-button" data-group="processing" data-id="processing_filter_choice" data-response="gain">
+                  <strong>Increase gain</strong>
+                  This scales the values up and down.
+                </button>
+                <button type="button" class="option-button" data-group="processing" data-id="processing_filter_choice" data-response="smoothing">
+                  <strong>Apply smoothing</strong>
+                  This averages neighboring samples to tame fast variations.
+                </button>
+                <button type="button" class="option-button" data-group="processing" data-id="processing_filter_choice" data-response="bitdepth">
+                  <strong>Change bit depth</strong>
+                  This affects storage precision, not post-recording filtering alone.
+                </button>
+              </div>
+              <div class="feedback" id="processing-feedback"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step locked" id="step-6" data-step="6">
+          <div class="step-head">
+            <div>
+              <div class="step-index">Step 6</div>
+              <h2>Synthesize the full story</h2>
+            </div>
+            <div class="status-pill" id="status-step-6">Locked</div>
+          </div>
+          <div class="step-grid">
+            <div class="info-card">
+              <h3>Your explanation</h3>
+              <p>
+                In 2–4 sentences, explain how sound moves from an analog waveform to digital storage and how a computer can then process it.
+              </p>
+              <label for="synthesis-text" class="visually-hidden">Final synthesis reflection</label>
+              <textarea id="synthesis-text" placeholder="Example: A microphone turns air-pressure changes into a waveform. The computer samples the wave at many moments, rounds each sample into one of a limited number of levels, stores those levels as binary, and then can change the numbers to amplify or smooth the sound."></textarea>
+              <div class="button-row" style="margin-top: var(--space-4);">
+                <button type="button" class="primary" id="save-synthesis">Save synthesis</button>
+              </div>
+              <div class="feedback" id="synthesis-feedback"></div>
+            </div>
+            <div class="summary-box">
+              <h3>Concept chain</h3>
+              <div class="summary-points" style="margin-top: var(--space-4);">
+                <div class="bit-box"><strong>Analog</strong><span>Continuous pressure changes.</span></div>
+                <div class="bit-box"><strong>Sampling</strong><span>Take snapshots over time.</span></div>
+                <div class="bit-box"><strong>Quantization</strong><span>Round each snapshot into levels.</span></div>
+                <div class="bit-box"><strong>Binary</strong><span>Encode levels as 0s and 1s.</span></div>
+                <div class="bit-box"><strong>Processing</strong><span>Edit the stored numbers.</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="sticky-panel" aria-label="Progress and submission panel">
+        <div>
+          <span class="badge">Progress map</span>
+          <ol class="progress-list" id="progress-list" style="margin-top: var(--space-4);">
+            <li><strong>1. Analog waveform</strong><span id="progress-step-1" class="active">Current</span></li>
+            <li><strong>2. Sampling</strong><span id="progress-step-2" class="locked">Locked</span></li>
+            <li><strong>3. Quantization</strong><span id="progress-step-3" class="locked">Locked</span></li>
+            <li><strong>4. Binary storage</strong><span id="progress-step-4" class="locked">Locked</span></li>
+            <li><strong>5. Processing</strong><span id="progress-step-5" class="locked">Locked</span></li>
+            <li><strong>6. Final synthesis</strong><span id="progress-step-6" class="locked">Locked</span></li>
+          </ol>
+        </div>
+
+        <div class="submit-panel">
+          <div class="status-box" id="submit-status">
+            <strong>Submission status</strong>
+            Interact with each checkpoint, then submit your action log to Moodle.
+          </div>
+          <div class="button-row">
+            <button type="button" class="primary" id="submit-attempt">Submit attempt</button>
+          </div>
+        </div>
+
+        <div>
+          <h3>Action evidence log</h3>
+          <pre class="action-log" id="action-log">[]</pre>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/micp.js"></script>
+  <script>
+    (function() {
+      var actions = [];
+      var completedSteps = {
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false
+      };
+      var gradedInteractions = {
+        analog_reveal: true,
+        sampling_rate_choice: true,
+        quantization_bits_choice: true,
+        binary_code_choice: true,
+        processing_filter_choice: true,
+        final_synthesis_reflection: true
+      };
+      var gradeStepMap = {
+        analog_reveal: 1,
+        sampling_rate_choice: 2,
+        quantization_bits_choice: 3,
+        binary_code_choice: 4,
+        processing_filter_choice: 5,
+        final_synthesis_reflection: 6
+      };
+      var latestByInteraction = {};
+      var actionLog = document.getElementById('action-log');
+      var submitStatus = document.getElementById('submit-status');
+      var submitButton = document.getElementById('submit-attempt');
+      var analogCanvas = document.getElementById('analog-canvas');
+      var samplingCanvas = document.getElementById('sampling-canvas');
+      var quantizationCanvas = document.getElementById('quantization-canvas');
+      var processingInputCanvas = document.getElementById('processing-input-canvas');
+      var processingOutputCanvas = document.getElementById('processing-output-canvas');
+      var sampleSlider = document.getElementById('sample-slider');
+      var bitSlider = document.getElementById('bit-slider');
+      var gainSlider = document.getElementById('gain-slider');
+      var smoothingSlider = document.getElementById('smoothing-slider');
+      var synthesisText = document.getElementById('synthesis-text');
+      var sampleData = [5, 6, 4, 2, 1, 3, 5, 7];
+      var selectedBinarySample = 0;
+      var animationFrame = 0;
+
+      function cssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      function setSubmitMessage(message, type) {
+        submitStatus.className = 'status-box' + (type ? ' ' + type : '');
+        submitStatus.innerHTML = '<strong>Submission status</strong>' + message;
+      }
+
+      function renderLog() {
+        actionLog.textContent = JSON.stringify(actions, null, 2);
+      }
+
+      function unlockUntil(step) {
+        var index;
+        var section;
+        var status;
+        var progress;
+        var isUnlocked;
+        var isCompleted;
+        for (index = 1; index <= 6; index += 1) {
+          section = document.getElementById(`step-${index}`);
+          status = document.getElementById(`status-step-${index}`);
+          progress = document.getElementById(`progress-step-${index}`);
+          isUnlocked = index <= step + 1;
+          isCompleted = completedSteps[index];
+          section.classList.toggle('locked', !isUnlocked);
+          section.classList.toggle('unlocked', isUnlocked);
+          section.classList.toggle('completed', isCompleted);
+          status.textContent = isCompleted ? 'Completed' : (isUnlocked ? 'Ready' : 'Locked');
+          progress.textContent = isCompleted ? 'Complete' : (isUnlocked ? 'Current / available' : 'Locked');
+          progress.className = isCompleted ? 'complete' : (isUnlocked ? 'active' : 'locked');
+        }
+      }
+
+      function recordAction(action) {
+        action.sequence = actions.length + 1;
+        actions.push(action);
+        latestByInteraction[action.interactionid] = action;
+        if (gradedInteractions[action.interactionid]) {
+          completedSteps[gradeStepMap[action.interactionid]] = true;
+          unlockUntil(gradeStepMap[action.interactionid]);
+        }
+        renderLog();
+        window.MICP.sendEvent('interaction', action);
+      }
+
+      function makeAction(interactionid, response, outcome, extras) {
+        var action = {
+          interactionid: interactionid,
+          response: response,
+          outcome: outcome
+        };
+        var key;
+        extras = extras || {};
+        for (key in extras) {
+          if (Object.prototype.hasOwnProperty.call(extras, key)) {
+            action[key] = extras[key];
+          }
+        }
+        return action;
+      }
+
+      function waveValue(t) {
+        return (Math.sin(t * Math.PI * 2) * 0.55) + (Math.sin(t * Math.PI * 6) * 0.18) + (Math.cos(t * Math.PI * 3) * 0.1);
+      }
+
+      function drawGrid(ctx, width, height) {
+        var x;
+        var y;
+        ctx.save();
+        ctx.strokeStyle = cssVar('--color-line');
+        ctx.lineWidth = 1;
+        for (x = 0; x <= width; x += width / 10) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (y = 0; y <= height; y += height / 8) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawWave(ctx, width, height, color, dataPoints, useSteps) {
+        var i;
+        var point;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (i = 0; i < dataPoints.length; i += 1) {
+          point = dataPoints[i];
+          if (i === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else if (useSteps) {
+            ctx.lineTo(point.x, dataPoints[i - 1].y);
+            ctx.lineTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function getContinuousPoints(width, height) {
+        var points = [];
+        var i;
+        var t;
+        for (i = 0; i <= 240; i += 1) {
+          t = i / 240;
+          points.push({
+            x: t * width,
+            y: height / 2 - waveValue(t + animationFrame * 0.0015) * height * 0.34
+          });
+        }
+        return points;
+      }
+
+      function drawAnalog() {
+        var ctx = analogCanvas.getContext('2d');
+        var width = analogCanvas.width;
+        var height = analogCanvas.height;
+        ctx.clearRect(0, 0, width, height);
+        drawGrid(ctx, width, height);
+        drawWave(ctx, width, height, cssVar('--color-analog'), getContinuousPoints(width, height), false);
+        ctx.fillStyle = cssVar('--color-muted');
+        ctx.font = '16px ' + cssVar('--font-body');
+        ctx.fillText('Air pressure changes continuously over time', 24, 32);
+      }
+
+      function getSamplePoints(count, width, height) {
+        var points = [];
+        var i;
+        var t;
+        for (i = 0; i < count; i += 1) {
+          t = count === 1 ? 0 : i / (count - 1);
+          points.push({
+            t: t,
+            x: t * width,
+            y: height / 2 - waveValue(t) * height * 0.34,
+            value: waveValue(t)
+          });
+        }
+        return points;
+      }
+
+      function drawSampling() {
+        var ctx = samplingCanvas.getContext('2d');
+        var width = samplingCanvas.width;
+        var height = samplingCanvas.height;
+        var count = Number(sampleSlider.value);
+        var points = getContinuousPoints(width, height);
+        var samples = getSamplePoints(count, width, height);
+        var i;
+        ctx.clearRect(0, 0, width, height);
+        drawGrid(ctx, width, height);
+        drawWave(ctx, width, height, 'rgba(127,255,212,0.35)', points, false);
+        ctx.save();
+        ctx.strokeStyle = cssVar('--color-sample');
+        ctx.lineWidth = 1;
+        ctx.fillStyle = cssVar('--color-sample');
+        for (i = 0; i < samples.length; i += 1) {
+          ctx.beginPath();
+          ctx.moveTo(samples[i].x, height * 0.12);
+          ctx.lineTo(samples[i].x, height * 0.88);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(samples[i].x, samples[i].y, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.fillStyle = cssVar('--color-muted');
+        ctx.font = '16px ' + cssVar('--font-body');
+        ctx.fillText('More sample points capture more of the original shape.', 24, 32);
+      }
+
+      function quantize(value, bits) {
+        var levels = 2 ** bits;
+        var normalized = (value + 1) / 2;
+        var index = Math.max(0, Math.min(levels - 1, Math.round(normalized * (levels - 1))));
+        return {
+          index: index,
+          normalized: index / (levels - 1),
+          value: (index / (levels - 1)) * 2 - 1,
+          levels: levels
+        };
+      }
+
+      function drawQuantization() {
+        var ctx = quantizationCanvas.getContext('2d');
+        var width = quantizationCanvas.width;
+        var height = quantizationCanvas.height;
+        var bits = Number(bitSlider.value);
+        var levels = 2 ** bits;
+        var samples = getSamplePoints(18, width, height);
+        var stepped = [];
+        var i;
+        var y;
+        var q;
+        ctx.clearRect(0, 0, width, height);
+        drawGrid(ctx, width, height);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        for (i = 0; i < levels; i += 1) {
+          y = ((levels - 1 - i) / (levels - 1)) * height;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+        drawWave(ctx, width, height, 'rgba(127,255,212,0.35)', getContinuousPoints(width, height), false);
+        for (i = 0; i < samples.length; i += 1) {
+          q = quantize(samples[i].value, bits);
+          stepped.push({
+            x: samples[i].x,
+            y: height / 2 - q.value * height * 0.34
+          });
+        }
+        drawWave(ctx, width, height, cssVar('--color-quantized'), stepped, true);
+        ctx.fillStyle = cssVar('--color-quantized');
+        for (i = 0; i < stepped.length; i += 1) {
+          ctx.beginPath();
+          ctx.arc(stepped[i].x, stepped[i].y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        document.getElementById('level-count').textContent = levels + ' levels';
+        document.getElementById('step-size').textContent = bits >= 5 ? 'Very fine rounding step' : (bits >= 4 ? 'Smaller rounding step' : 'Large rounding step');
+      }
+
+      function toBinaryString(value, bits) {
+        return value.toString(2).padStart(bits, '0');
+      }
+
+      function renderBinaryExplorer() {
+        var container = document.getElementById('sample-buttons');
+        var bitContainer = document.getElementById('binary-bits');
+        var label = document.getElementById('binary-sample-label');
+        var value = document.getElementById('binary-sample-value');
+        var i;
+        var button;
+        container.innerHTML = '';
+        for (i = 0; i < sampleData.length; i += 1) {
+          button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'sample-button' + (i === selectedBinarySample ? ' active' : '');
+          button.innerHTML = '<strong>S' + (i + 1) + '</strong><span>' + sampleData[i] + '</span>';
+          button.setAttribute('data-index', String(i));
+          container.appendChild(button);
+        }
+        label.textContent = 'Sample ' + (selectedBinarySample + 1);
+        value.textContent = 'Quantized level ' + sampleData[selectedBinarySample] + ' out of 7';
+        bitContainer.innerHTML = '';
+        toBinaryString(sampleData[selectedBinarySample], 3).split('').forEach(function(bit) {
+          var chip = document.createElement('div');
+          chip.className = 'binary-chip';
+          chip.textContent = bit;
+          bitContainer.appendChild(chip);
+        });
+      }
+
+      function processSamples(input, gain, smoothingWindow) {
+        var amplified = input.map(function(value) {
+          return Math.max(-1, Math.min(1, value * gain));
+        });
+        if (smoothingWindow <= 1) {
+          return amplified;
+        }
+        return amplified.map(function(value, index) {
+          var offset;
+          var total = 0;
+          var count = 0;
+          var neighbor;
+          for (offset = -smoothingWindow + 1; offset < smoothingWindow; offset += 1) {
+            neighbor = amplified[index + offset];
+            if (typeof neighbor === 'number') {
+              total += neighbor;
+              count += 1;
+            }
+          }
+          return count ? total / count : value;
+        });
+      }
+
+      function drawSampleSeries(canvas, data, color, title) {
+        var ctx = canvas.getContext('2d');
+        var width = canvas.width;
+        var height = canvas.height;
+        var points = data.map(function(value, index) {
+          return {
+            x: (index / (data.length - 1)) * width,
+            y: height / 2 - value * height * 0.34
+          };
+        });
+        var i;
+        ctx.clearRect(0, 0, width, height);
+        drawGrid(ctx, width, height);
+        drawWave(ctx, width, height, color, points, false);
+        ctx.fillStyle = color;
+        for (i = 0; i < points.length; i += 1) {
+          ctx.beginPath();
+          ctx.arc(points[i].x, points[i].y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = cssVar('--color-muted');
+        ctx.font = '14px ' + cssVar('--font-body');
+        ctx.fillText(title, 20, 28);
+      }
+
+      function drawProcessing() {
+        var input = [-0.25, 0.58, -0.12, 0.82, -0.74, 0.66, -0.18, 0.72, -0.48, 0.28, 0.08, -0.22];
+        var gain = Number(gainSlider.value) / 10;
+        var smoothing = Number(smoothingSlider.value);
+        var output = processSamples(input, gain, smoothing);
+        drawSampleSeries(processingInputCanvas, input, cssVar('--color-sample'), 'Original stored samples');
+        drawSampleSeries(processingOutputCanvas, output, cssVar('--color-processed'), 'Processed sample values');
+      }
+
+      function updateControls() {
+        document.getElementById('sample-slider-value').textContent = sampleSlider.value;
+        document.getElementById('bit-slider-value').textContent = bitSlider.value;
+        document.getElementById('gain-slider-value').textContent = (Number(gainSlider.value) / 10).toFixed(1) + '×';
+        document.getElementById('smoothing-slider-value').textContent = smoothingSlider.value;
+      }
+
+      function markChoice(group, response, isCorrect, feedbackId, correctText, wrongText) {
+        var buttons = document.querySelectorAll('[data-group="' + group + '"]');
+        buttons.forEach(function(button) {
+          if (button.getAttribute('data-response') === response) {
+            button.setAttribute('data-state', isCorrect ? 'correct' : 'wrong');
+          } else {
+            button.removeAttribute('data-state');
+          }
+        });
+        document.getElementById(feedbackId).textContent = isCorrect ? correctText : wrongText;
+      }
+
+      function attachChoiceHandlers() {
+        document.querySelectorAll('.option-button').forEach(function(button) {
+          button.addEventListener('click', function() {
+            var interactionid = button.getAttribute('data-id');
+            var response = button.getAttribute('data-response');
+            var isCorrect = false;
+            var group = button.getAttribute('data-group');
+            var feedbackId = group + '-feedback';
+            var correctText = '';
+            var wrongText = '';
+
+            if (interactionid === 'sampling_rate_choice') {
+              isCorrect = response === 'high';
+              correctText = 'Correct: more sample points preserve the waveform shape more accurately.';
+              wrongText = 'Try again: lower sample density skips over more of the changing waveform.';
+            }
+            if (interactionid === 'quantization_bits_choice') {
+              isCorrect = response === '5';
+              correctText = 'Correct: 5 bits = 2^5 = 32 quantization levels.';
+              wrongText = 'Not yet: each extra bit doubles the levels, so count powers of two.';
+            }
+            if (interactionid === 'binary_code_choice') {
+              isCorrect = response === '101';
+              correctText = 'Correct: 101 means 4 + 1 = 5.';
+              wrongText = 'Try converting each bit position into its decimal value again.';
+            }
+            if (interactionid === 'processing_filter_choice') {
+              isCorrect = response === 'smoothing';
+              correctText = 'Correct: smoothing averages neighbors, so sharp zig-zags shrink.';
+              wrongText = 'Look at the processed waveform again: scaling is not the same as smoothing.';
+            }
+
+            markChoice(group, response, isCorrect, feedbackId, correctText, wrongText);
+            recordAction(makeAction(interactionid, response, isCorrect ? 'correct' : 'incorrect', {
+              promptgroup: group,
+              correctresponse: interactionid === 'sampling_rate_choice' ? 'high' : (interactionid === 'quantization_bits_choice' ? '5' : (interactionid === 'binary_code_choice' ? '101' : 'smoothing'))
+            }));
+          });
+        });
+      }
+
+      document.getElementById('reveal-analog').addEventListener('click', function() {
+        document.getElementById('analog-callout').textContent = 'Analog sound is continuous: the microphone signal can take any value along the curve before the computer samples it.';
+        recordAction(makeAction('analog_reveal', 'revealed', 'completed', { completed: true }));
+      });
+
+      sampleSlider.addEventListener('input', function() {
+        updateControls();
+        drawSampling();
+      });
+
+      sampleSlider.addEventListener('change', function() {
+        recordAction(makeAction('sampling_slider_explore', sampleSlider.value, 'adjusted', { control: 'sample-slider' }));
+      });
+
+      document.getElementById('freeze-samples').addEventListener('click', function() {
+        recordAction(makeAction('sampling_capture_explore', sampleSlider.value, 'captured', { control: 'freeze-samples' }));
+      });
+
+      bitSlider.addEventListener('input', function() {
+        updateControls();
+        drawQuantization();
+      });
+
+      bitSlider.addEventListener('change', function() {
+        recordAction(makeAction('quantization_slider_explore', bitSlider.value, 'adjusted', { control: 'bit-slider' }));
+      });
+
+      document.getElementById('sample-buttons').addEventListener('click', function(event) {
+        var button = event.target.closest('button[data-index]');
+        if (!button) {
+          return;
+        }
+        selectedBinarySample = Number(button.getAttribute('data-index'));
+        renderBinaryExplorer();
+        recordAction(makeAction('binary_sample_focus', String(selectedBinarySample + 1), 'inspected', {
+          decimallevel: sampleData[selectedBinarySample],
+          binary: toBinaryString(sampleData[selectedBinarySample], 3)
+        }));
+      });
+
+      gainSlider.addEventListener('input', function() {
+        updateControls();
+        drawProcessing();
+      });
+
+      gainSlider.addEventListener('change', function() {
+        recordAction(makeAction('gain_slider_explore', (Number(gainSlider.value) / 10).toFixed(1), 'adjusted', { control: 'gain-slider' }));
+      });
+
+      smoothingSlider.addEventListener('input', function() {
+        updateControls();
+        drawProcessing();
+      });
+
+      smoothingSlider.addEventListener('change', function() {
+        recordAction(makeAction('smoothing_slider_explore', smoothingSlider.value, 'adjusted', { control: 'smoothing-slider' }));
+      });
+
+      document.getElementById('save-synthesis').addEventListener('click', function() {
+        var response = synthesisText.value.trim();
+        document.getElementById('synthesis-feedback').textContent = response ? 'Saved. Your explanation is ready to submit.' : 'Write a brief explanation before saving.';
+        recordAction(makeAction('final_synthesis_reflection', response, response ? 'saved' : 'empty', {
+          prompt: 'Explain analog waveform to digital processing chain'
+        }));
+      });
+
+      window.addEventListener('micp:submit-success', function() {
+        submitButton.disabled = false;
+        setSubmitMessage('Your raw action log was submitted successfully.', 'ok');
+      });
+
+      window.addEventListener('micp:submit-error', function(event) {
+        var detail = event && event.detail ? event.detail : {};
+        submitButton.disabled = false;
+        setSubmitMessage(detail.message || 'Submission failed. Please try again.', 'error');
+      });
+
+      submitButton.addEventListener('click', function() {
+        submitButton.disabled = true;
+        setSubmitMessage('Submitting your raw action log...', '');
+        window.MICP.submit({
+          raw: {
+            actions: actions.slice()
+          }
+        });
+      });
+
+      function animate() {
+        animationFrame += 1;
+        drawAnalog();
+        window.requestAnimationFrame(animate);
+      }
+
+      window.MICP.init({
+        source: 'audio-digitization-micp'
+      });
+
+      updateControls();
+      unlockUntil(0);
+      renderLog();
+      drawSampling();
+      drawQuantization();
+      renderBinaryExplorer();
+      drawProcessing();
+      animate();
+      attachChoiceHandlers();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MICP demo</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.5;
+        margin: 0;
+        padding: 2rem;
+        background: #f6f8fb;
+        color: #1f2933;
+    }
+
+    main {
+        max-width: 48rem;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #d9e2ec;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+    }
+
+    .panel {
+        border: 1px solid #d9e2ec;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+    }
+
+    button {
+        border: 0;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: #0f62fe;
+        color: #ffffff;
+        cursor: pointer;
+    }
+
+    button.secondary {
+        background: #52606d;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        max-width: 24rem;
+        padding: 0.75rem;
+        border: 1px solid #bcccdc;
+        border-radius: 0.5rem;
+    }
+
+    pre {
+        background: #102a43;
+        color: #f0f4f8;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+    }
+
+    .status {
+        margin-top: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background: #e9f2ff;
+        color: #102a43;
+    }
+
+    .status.error {
+        background: #ffe3e3;
+        color: #7d1d1d;
+    }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>MICP demo content</h1>
+        <p>
+            This same-origin demo intentionally keeps grading authority on the Moodle side.
+            It emits raw interaction data only, then submits an action log snapshot for the server to evaluate.
+        </p>
+
+        <section class="panel" aria-labelledby="click-task-title">
+            <h2 id="click-task-title">Interaction 1: button click</h2>
+            <p>Click the practice button to emit an <code>interaction</code> event.</p>
+            <div class="actions">
+                <button type="button" id="demo-button">Record button interaction</button>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="text-task-title">
+            <h2 id="text-task-title">Interaction 2: text input</h2>
+            <p>Enter a short reflection and save it as another raw interaction event.</p>
+            <label for="reflection-input">Reflection</label>
+            <input type="text" id="reflection-input" placeholder="Type something you learned">
+            <div class="actions">
+                <button type="button" id="save-reflection">Save reflection event</button>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="complete-task-title">
+            <h2 id="complete-task-title">Interaction 3: completion marker</h2>
+            <p>Use this when the learner decides the page is complete.</p>
+            <div class="actions">
+                <button type="button" class="secondary" id="mark-complete">Mark section complete</button>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="submit-task-title">
+            <h2 id="submit-task-title">Submit raw action data</h2>
+            <p>
+                The payload below contains only the learner action log and simple client metadata.
+                It does not compute or send a final score.
+            </p>
+            <div class="actions">
+                <button type="button" id="submit-attempt">Submit attempt</button>
+            </div>
+            <p id="submit-status" class="status">Not submitted yet.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="activity-log-title">
+            <h2 id="activity-log-title">Client-side activity log</h2>
+            <pre id="activity-log">[]</pre>
+        </section>
+    </main>
+
+    <script src="../micp.js"></script>
+    <script>
+    (function() {
+        var actions = [];
+        var activityLog = document.getElementById('activity-log');
+        var reflectionInput = document.getElementById('reflection-input');
+        var submitButton = document.getElementById('submit-attempt');
+        var submitStatus = document.getElementById('submit-status');
+
+        function setSubmitStatus(message, isError) {
+            submitStatus.textContent = message;
+            submitStatus.className = isError ? 'status error' : 'status';
+        }
+
+        function renderActions() {
+            activityLog.textContent = JSON.stringify(actions, null, 2);
+        }
+
+        function recordAction(action) {
+            actions.push(action);
+            renderActions();
+        }
+
+        window.MICP.init({
+            source: 'demo'
+        });
+
+        document.getElementById('demo-button').addEventListener('click', function() {
+            var action = {
+                interactionid: 'button_demo',
+                action: 'button_click',
+                control: 'demo-button',
+                label: 'Record button interaction',
+                response: 'clicked'
+            };
+
+            recordAction(action);
+            window.MICP.sendEvent('interaction', action);
+        });
+
+        document.getElementById('save-reflection').addEventListener('click', function() {
+            var action = {
+                interactionid: 'reflection_text',
+                action: 'text_entry',
+                control: 'reflection-input',
+                value: reflectionInput.value.trim()
+            };
+
+            action.response = action.value;
+
+            recordAction(action);
+            window.MICP.sendEvent('interaction', action);
+        });
+
+        document.getElementById('mark-complete').addEventListener('click', function() {
+            var action = {
+                interactionid: 'completion_marker',
+                action: 'completion_click',
+                control: 'mark-complete',
+                completed: true
+            };
+
+            action.outcome = 'completed';
+
+            recordAction(action);
+            window.MICP.sendEvent('interaction', action);
+        });
+
+        window.addEventListener('micp:submit-success', function(event) {
+            var result = event && event.detail ? event.detail.result || {} : {};
+            submitButton.disabled = false;
+            setSubmitStatus(
+                'Submission saved. Server score: ' + (result.score || 0) + '%. Grade updated: ' + (result.gradeupdated ? 'yes' : 'no') + '.',
+                false
+            );
+        });
+
+        window.addEventListener('micp:submit-error', function(event) {
+            var detail = event && event.detail ? event.detail : {};
+            submitButton.disabled = false;
+            setSubmitStatus(detail.message || 'Submission failed. Please try again.', true);
+        });
+
+        submitButton.addEventListener('click', function() {
+            submitButton.disabled = true;
+            setSubmitStatus('Submitting attempt...', false);
+            window.MICP.submit({
+                raw: {
+                    actions: actions.slice()
+                },
+                summary: {
+                    interactionCount: actions.length,
+                    reflectionLength: reflectionInput.value.trim().length
+                }
+            });
+        });
+
+        renderActions();
+    })();
+    </script>
+</body>
+</html>

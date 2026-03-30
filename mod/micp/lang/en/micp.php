@@ -1,0 +1,35 @@
+<?php
+
+$string['pluginname'] = 'MICP activity';
+$string['pluginnameplural'] = 'MICP activities';
+$string['modulename'] = 'MICP activity';
+$string['modulenameplural'] = 'MICP activities';
+$string['modulename_help'] = 'MICP is a placeholder interactive activity scaffold for Moodle 5.x.';
+$string['micp:addinstance'] = 'Add a new MICP activity';
+$string['micp:view'] = 'View MICP activity';
+$string['micp:submit'] = 'Submit MICP activity responses';
+$string['micp:viewreports'] = 'View MICP activity reports';
+$string['activityplaceholder'] = 'MICP placeholder activity content will be rendered here.';
+$string['defaultlaunchpath'] = 'sample_content/demo.html';
+$string['launchpath'] = 'Launch path';
+$string['launchpath_help'] = 'Relative plugin-local HTML file to load for the embedded activity.';
+$string['launchfile'] = 'Uploaded HTML package or file';
+$string['launchfile_help'] = 'Upload either a ZIP package containing index.html and any required CSS, JavaScript, or image assets, or upload a single standalone HTML file. If present, it overrides the launch path setting.';
+$string['noinstances'] = 'No MICP activities have been added to this course yet.';
+$string['privacy:metadata'] = 'The MICP activity scaffold stores interaction and submission data.';
+$string['reporttitle'] = 'MICP results';
+$string['viewresults'] = 'View results';
+$string['participant'] = 'Participant';
+$string['submissionstatus'] = 'Submission status';
+$string['lastsubmission'] = 'Last submission';
+$string['activityscore'] = 'Activity score';
+$string['interactionbreakdown'] = 'Interaction breakdown';
+$string['grade'] = 'Grade';
+$string['reportsummary'] = 'Participants: {$a->participants}, submitted: {$a->submitted}, graded: {$a->graded}';
+$string['nograderecord'] = 'No grade yet';
+$string['notsubmitted'] = 'Not submitted';
+$string['submitted'] = 'Submitted';
+$string['never'] = 'Never';
+$string['groupfilterlabel'] = 'Group filter';
+$string['submiterror'] = 'The MICP submission could not be processed.';
+$string['viewerror'] = 'The MICP activity could not be displayed.';

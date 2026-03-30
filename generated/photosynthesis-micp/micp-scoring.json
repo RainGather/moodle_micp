@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "aggregation": {
+    "method": "sum",
+    "maxscore": 100
+  },
+  "interactions": [
+    {
+      "id": "ps_equation_reveal",
+      "label": "Photosynthesis equation reveal",
+      "type": "presence",
+      "weight": 20,
+      "scoring": {
+        "completed": true
+      }
+    },
+    {
+      "id": "ps_location_choice",
+      "label": "Photosynthesis location choice",
+      "type": "choice",
+      "weight": 40,
+      "scoring": {
+        "correct": "chloroplast"
+      }
+    },
+    {
+      "id": "ps_light_role_choice",
+      "label": "Light role choice",
+      "type": "choice",
+      "weight": 40,
+      "scoring": {
+        "correct": "energy_source"
+      }
+    }
+  ]
+}

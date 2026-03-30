@@ -1,0 +1,38 @@
+<section class="mod-micp-activity" data-region="mod-micp-activity">
+    <h2>{{name}}</h2>
+    {{{intro}}}
+    <div class="mod-micp-activity__summary" style="margin: 1rem 0; padding: 1rem; border: 1px solid #d8dee9; border-radius: 0.75rem; background: #f8fafc;">
+        <h3 style="margin-top: 0;">Your activity result</h3>
+        <p style="margin-bottom: 0.5rem;"><strong>Status:</strong> {{resultsummary.statuslabel}}</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Activity score:</strong> {{resultsummary.scorelabel}}%</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Grade:</strong> {{resultsummary.rawgradelabel}} / {{resultsummary.grademaxlabel}}</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Interaction state:</strong> {{resultsummary.interactionslabel}}</p>
+        {{#resultsummary.showsubmittedat}}
+            <p style="margin-bottom: 0;"><strong>Last submitted:</strong> {{resultsummary.submittedatlabel}}</p>
+        {{/resultsummary.showsubmittedat}}
+        {{#resultsummary.showdetails}}
+            <div style="margin-top: 1rem;">
+                <strong>Interaction breakdown:</strong>
+                <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
+                    {{#resultsummary.details}}
+                        <li>{{label}} — {{scorelabel}}</li>
+                    {{/resultsummary.details}}
+                </ul>
+            </div>
+        {{/resultsummary.showdetails}}
+        {{#canviewreports}}
+            <p style="margin: 1rem 0 0;"><a href="{{reporturl}}">View results</a></p>
+        {{/canviewreports}}
+    </div>
+    <div class="mod-micp-activity__frame" data-region="mod-micp-iframe-container">
+        <iframe
+            id="{{iframeid}}"
+            src="{{iframesrc}}"
+            title="{{iframetitle}}"
+            loading="eager"
+            referrerpolicy="same-origin"
+            data-launch-path="{{launchpath}}"
+            style="width: 100%; min-height: 720px; border: 0;"
+        ></iframe>
+    </div>
+</section>

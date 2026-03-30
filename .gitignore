@@ -1,0 +1,70 @@
+# OS / Environment
+*.deb
+*.rpm
+*.tar.gz
+*.tar.zst
+.DS_Store
+Thumbs.db
+
+# PHP
+*.phar
+.phpunit.result.cache
+vendor/
+phpunit.xml
+phpcs.xml
+phpcbf.xml
+
+# Moodle
+moodle.config.php
+config.php
+cache/
+sessions/
+temp/
+log/
+data/
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+.project
+.settings/
+
+# Build artifacts
+*.zip
+!generated/*.zip
+!mod/micp/sample_content/*.zip
+
+# Composer
+composer.lock
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Testing
+.phpunit.result.cache
+.php-test/
+cov/
+
+# Local development
+.local/
+*.local.*
+.env
+.env.*
+
+# Sisyphus (agent tooling)
+.sisyphus/
+agent-log.txt
