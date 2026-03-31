@@ -2,6 +2,7 @@
    PATTERN: Multiple Choice Interaction
    ================================================================
    Choice interaction with immediate correct/incorrect feedback.
+   Design note: options should be easy to scan and compare, with concise labels and helpful descriptions.
 
    HTML: One .option-grid container with .option-button children.
    Each button has: data-group, data-id (interactionid), data-response.
@@ -40,4 +41,6 @@ CSS (already in template):
 .option-button[data-state="correct"] { border-color: rgba(127,255,212,0.48); background: rgba(127,255,212,0.08); }
 .option-button[data-state="wrong"] { border-color: rgba(255,143,143,0.5); background: rgba(255,143,143,0.08); }
 .feedback { min-height: 1.5rem; color: var(--color-muted); }
+
+Keep one selection path visually primary and avoid extra buttons that compete with the question.
 */

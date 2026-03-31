@@ -82,6 +82,16 @@ var gradeStepMap = { 'q1_choice': 1, 'q2_reflect': 2 };
 
 Each step's HTML has `id="step-N"` and `data-step="N"`.
 
+## Interface Guardrails
+
+- Make one action visually primary per step.
+- Use semantic tokens and the existing template classes before adding one-off styling.
+- Prefer SVG icons and concept visuals; avoid emoji as core UI.
+- Keep motion subtle and helpful. If you add animation, support reduced-motion.
+- Cover empty, loading, saved, and error states when the lesson needs them.
+- Keep the lesson browser-friendly and responsive; do not mimic a native app shell.
+- Never let styling interfere with MICP hooks, interaction IDs, or submission behavior.
+
 ## Template Placeholders (in index.html template)
 
 | Placeholder | Purpose |

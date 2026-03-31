@@ -2,11 +2,13 @@
    PATTERN: Text Reflection / Free Response
    ================================================================
    Textarea for open-ended learner response, graded by non-empty check.
+   Design note: prompts should feel calm and specific; the save action should be the clear primary control.
 
    GRADING: Use "requireNonEmpty": true in micp-scoring.json.
    Free-text grading is intentionally simple — teacher can review.
 
    recordAction fires on save button click, not on every keystroke.
+   Provide visible saved/empty/error feedback near the textarea.
    ================================================================ */
 
 /* HTML:

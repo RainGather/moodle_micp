@@ -3,11 +3,13 @@
    ================================================================
    Buttons to select sample data; display shows value representation.
    Used for: binary explorer, color mixer, coordinate plotter.
+   Design note: exploration controls should stay lightweight so the representation remains the focal point.
 
    FLOW:
    1. Click a sample button → select data point
    2. Show representation (binary, color, coordinates)
    3. recordAction fires with the selected value
+   Include a clear default state so the explorer never feels empty or broken.
    ================================================================ */
 
 /* HTML:

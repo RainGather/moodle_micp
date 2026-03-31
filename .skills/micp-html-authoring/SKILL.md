@@ -25,6 +25,10 @@ If the user only asks for one, remind them both are needed and produce both anyw
 
 **The HTML never computes its own grade.** It only records structured evidence. The server grades via `micp-scoring.json`. Never put `score`, `rawgrade`, or any grade claim in `submit()` payloads.
 
+## Interface Quality Rule
+
+Visual polish is important, but it is always secondary to the MICP contract. Modern styling must **never** interfere with MICP SDK integration, postMessage flows, step progression, accessibility, response capture, or server-side grading.
+
 ## ZIP Packaging Contract
 
 Uploaded MICP packages are served by Moodle using the **full relative launch path**, not by guessing from the filename alone.
@@ -160,13 +164,46 @@ Show a canvas animation, then ask a single-choice question about it.
 ## Workflow
 
 1. **Understand the topic and learning goal** — ask if unclear
-2. **Plan interactions** — list each graded interaction with its `interactionid`, type, and scoring rule
-3. **Assign weights** — weights sum to your `maxscore` (usually 100); distribute by importance
-4. **Generate** `index.html` and `micp-scoring.json` together
-5. **Cross-check**: every `interactionid` in scoring config appears in HTML event payloads
-6. **Verify**: `window.MICP.init()` is called, `sendEvent` fires for each interaction, `submit` fires on button click
-7. **Verify path integrity**: if `index.html` is nested, all asset URLs still resolve relative to it
-8. **Package**: ZIP the directory for upload to mod_micp
+2. **Plan the interface system** — define a lightweight visual direction before writing HTML: hierarchy, palette, typography scale, spacing rhythm, icon style, motion limits, and anti-patterns
+3. **Plan interactions** — list each graded interaction with its `interactionid`, type, and scoring rule
+4. **Assign weights** — weights sum to your `maxscore` (usually 100); distribute by importance
+5. **Generate** `index.html` and `micp-scoring.json` together
+6. **Cross-check**: every `interactionid` in scoring config appears in HTML event payloads
+7. **Verify**: `window.MICP.init()` is called, `sendEvent` fires for each interaction, `submit` fires on button click
+8. **Verify path integrity**: if `index.html` is nested, all asset URLs still resolve relative to it
+9. **Package**: ZIP the directory for upload to mod_micp
+
+## UI/UX Authoring Guardrails
+
+Apply these in order of priority:
+
+1. **Accessibility and clarity first** — readable hierarchy, labeled controls, visible focus states, adequate contrast, and calm feedback matter more than decorative flair.
+2. **Interaction clarity before styling** — each step should make the learner's next action obvious.
+3. **Responsive layout before ornament** — lessons must remain readable and usable on narrow browser widths without horizontal scrolling.
+4. **Style with restraint** — use polish to support comprehension, not to turn the lesson into a landing page or app shell.
+
+When generating lesson UI:
+
+- Prefer **one primary action per step or screen**. Secondary actions should be visually quieter.
+- Use **progressive disclosure** so each step reveals only the amount of information needed for the current learning task.
+- Use **semantic tokens** for color, spacing, radius, shadow, and motion. Avoid one-off hard-coded styling unless it clearly matches the template system.
+- Use **SVG icons or topic visuals**, not emoji as structural UI.
+- Keep motion subtle: short transitions, hover/focus feedback, and state changes that help orientation. Respect `prefers-reduced-motion` when adding custom animation.
+- Include clear **empty, loading, saved, success, and error states** where the interaction needs them. Feedback should be calm, specific, and actionable.
+- Keep visuals purposeful. Charts, diagrams, and hero visuals should explain the concept, not just decorate the page.
+- Maintain a consistent visual rhythm: strong heading hierarchy, concise copy blocks, generous spacing, and repeatable card patterns.
+
+## Anti-Patterns to Avoid
+
+Do **not** generate any of these unless the user explicitly asks for them and they still fit the MICP lesson format:
+
+- Landing-page hero sections with marketing copy or conversion language
+- Multiple competing primary CTAs in one step
+- Native-app chrome such as bottom tab bars, swipe-first navigation, or app-shell layouts
+- Decorative animation, parallax, autoplay motion, or flashy transitions that distract from the task
+- Emoji-driven UI in place of proper labels, icons, or diagrams
+- Dense dashboards that bury the learning interaction under metrics or status widgets
+- Styling changes that obscure interaction IDs, feedback states, or submit behavior
 
 ## Bundle Resources
 
@@ -199,6 +236,13 @@ Before finishing, verify ALL of these:
 - [ ] No `score`, `rawgrade`, or grade fields in submit payload
 - [ ] `assets/micp.js` copied to output directory
 - [ ] CSS uses the CSS variable system from the template (or no custom CSS conflicts)
+- [ ] One primary action is visually dominant in each step or screen
+- [ ] Visual hierarchy is clear through spacing, heading scale, contrast, and grouping
+- [ ] Layout works on narrow screens without horizontal scrolling or cramped controls
+- [ ] Icons/illustrations are SVG-based and concept-relevant, not emoji placeholders
+- [ ] Motion is subtle, purposeful, and reduced-motion-safe
+- [ ] Empty/loading/saved/error states are covered where the interaction needs them
+- [ ] Visual polish supports the lesson instead of turning it into a landing page or app shell
 - [ ] All paths are relative (ZIP-safe — no absolute URLs)
 - [ ] If the package is nested, `index.html` and `assets/` still line up via relative paths
 - [ ] Language attribute set correctly (`lang="en"` or `lang="zh"`)
@@ -220,6 +264,15 @@ The template uses a dark space-inspired design system. Key CSS variables:
 ```
 
 Use these classes: `.panel`, `.step`, `.viz-card`, `.info-card`, `.control-card`, `.option-button`, `.primary`, `.secondary`, `.feedback`, `.status-box`, `.sticky-panel`.
+
+Use the template as a **lightweight design system**, not just a CSS dump:
+
+- Reuse the token system for spacing, radius, shadow, and motion before inventing new values.
+- Keep typography disciplined: one strong display style for major headings, one readable body style for instructions and feedback.
+- Maintain a consistent elevation scale. A few soft shadows are enough; avoid stacking multiple glow effects.
+- Prefer concise copy blocks and scannable cards over long paragraphs.
+- Browser layouts should work comfortably across small mobile widths, tablet widths, and large desktop widths.
+- If you customize the visual theme, preserve the same level of contrast, focus visibility, and state clarity.
 
 ## Language
 

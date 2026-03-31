@@ -3,6 +3,7 @@
    ================================================================
    A lesson step that unlocks the next step when completed.
    Used for: multi-stage lessons, guided discovery, mastery learning
+   Design note: one clear primary action per step; visuals should teach, not decorate.
 
    STRUCTURE:
    <section class="step unlocked" id="step-N" data-step="N">
@@ -14,12 +15,12 @@
        <div class="status-pill" id="status-step-N">Ready</div>
      </div>
      <div class="step-grid">
-       <div class="viz-card">
-         <!-- Visualization: canvas, SVG, or interactive element -->
-       </div>
-       <div class="info-card">
-         <h3>Checkpoint</h3>
-         <p>Instructions for the learner.</p>
+        <div class="viz-card">
+          <!-- Visualization: canvas, SVG, or interactive element that explains the current concept -->
+        </div>
+        <div class="info-card">
+          <h3>Checkpoint</h3>
+          <p>Short, concrete instruction for the learner. Keep copy scannable.</p>
          <div class="option-grid" id="interaction-options">
            <button type="button" class="option-button"
              data-group="interaction_group"
@@ -34,6 +35,7 @@
      </div>
    </section>
 
-   GRADED: Set gradedInteractions[interactionid] = true in JS setup.
-   UNGRADED EXPLORATION: Use a non-graded button with different interactionid.
+    GRADED: Set gradedInteractions[interactionid] = true in JS setup.
+    UNGRADED EXPLORATION: Use a non-graded button with different interactionid.
+    Keep focus states visible and avoid adding decorative motion that delays the next step.
    ================================================================ */
