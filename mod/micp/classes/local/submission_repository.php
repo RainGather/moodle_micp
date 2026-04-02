@@ -20,7 +20,18 @@ namespace mod_micp\local;
 defined('MOODLE_INTERNAL') || die();
 
 class submission_repository {
-    public function upsert(int $micpid, int $userid, string $rawjson, ?string $clientmeta, int $score): \stdClass {
+    public function upsert(
+        int $micpid,
+        int $userid,
+        string $rawjson,
+        ?string $clientmeta,
+        int $score,
+        string $reviewstatus,
+        ?int $finalscore = null,
+        ?string $reviewjson = null,
+        ?int $reviewedby = null,
+        int $reviewedat = 0
+    ): \stdClass {
         global $DB;
 
         $now = time();
@@ -33,6 +44,11 @@ class submission_repository {
             $existing->rawjson = $rawjson;
             $existing->clientmeta = $clientmeta;
             $existing->score = $score;
+            $existing->reviewstatus = $reviewstatus;
+            $existing->finalscore = $finalscore;
+            $existing->reviewjson = $reviewjson;
+            $existing->reviewedby = $reviewedby;
+            $existing->reviewedat = $reviewedat;
             $existing->timemodified = $now;
             $DB->update_record('micp_submissions', $existing);
 
@@ -45,6 +61,11 @@ class submission_repository {
             'rawjson' => $rawjson,
             'clientmeta' => $clientmeta,
             'score' => $score,
+            'reviewstatus' => $reviewstatus,
+            'finalscore' => $finalscore,
+            'reviewjson' => $reviewjson,
+            'reviewedby' => $reviewedby,
+            'reviewedat' => $reviewedat,
             'timecreated' => $now,
             'timemodified' => $now,
         ];
@@ -52,5 +73,42 @@ class submission_repository {
         $record->id = $DB->insert_record('micp_submissions', $record);
 
         return $record;
+    }
+
+    public function get_latest(int $micpid, int $userid): ?\stdClass {
+        global $DB;
+
+        return $DB->get_record('micp_submissions', [
+            'micpid' => $micpid,
+            'userid' => $userid,
+        ]) ?: null;
+    }
+
+    public function save_review(
+        int $micpid,
+        int $userid,
+        int $finalscore,
+        string $reviewjson,
+        int $reviewedby,
+        int $reviewedat,
+        string $reviewstatus = 'reviewed'
+    ): \stdClass {
+        global $DB;
+
+        $submission = $this->get_latest($micpid, $userid);
+        if (!$submission) {
+            throw new \coding_exception('Cannot save review for missing submission.');
+        }
+
+        $submission->finalscore = $finalscore;
+        $submission->reviewjson = $reviewjson;
+        $submission->reviewedby = $reviewedby;
+        $submission->reviewedat = $reviewedat;
+        $submission->reviewstatus = $reviewstatus;
+        $submission->timemodified = $reviewedat;
+
+        $DB->update_record('micp_submissions', $submission);
+
+        return $DB->get_record('micp_submissions', ['id' => $submission->id], '*', \MUST_EXIST);
     }
 }

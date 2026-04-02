@@ -34,12 +34,18 @@ class submission_service {
         $transaction = $DB->start_delegated_transaction();
 
         $evaluation = \micp_evaluate($micp, $userid);
+        $reviewstatus = !empty($evaluation['needsmanualreview']) ? 'pending' : 'not_required';
         $submission = $this->submissions->upsert(
             $micp->id,
             $userid,
             $rawjson,
             $clientmeta,
-            (int) ($evaluation['score'] ?? 0)
+            (int) ($evaluation['score'] ?? 0),
+            $reviewstatus,
+            $reviewstatus === 'not_required' ? (int) ($evaluation['score'] ?? 0) : null,
+            null,
+            null,
+            0
         );
 
         $transaction->allow_commit();

@@ -61,7 +61,7 @@ final class submission_service_test extends \advanced_testcase {
         ];
 
         $micp->id = $DB->insert_record('micp', $micp);
-        $module = $DB->get_record('modules', ['name' => 'micp'], '*', MUST_EXIST);
+        $module = $DB->get_record('modules', ['name' => 'micp'], '*', \MUST_EXIST);
         $DB->insert_record('course_modules', (object) [
             'course' => $courseid,
             'module' => $module->id,
@@ -97,7 +97,18 @@ final class testable_submission_repository extends submission_repository {
     public ?string $capturedclientmeta = null;
     public ?int $capturedscore = null;
 
-    public function upsert(int $micpid, int $userid, string $rawjson, ?string $clientmeta, int $score): \stdClass {
+    public function upsert(
+        int $micpid,
+        int $userid,
+        string $rawjson,
+        ?string $clientmeta,
+        int $score,
+        string $reviewstatus,
+        ?int $finalscore = null,
+        ?string $reviewjson = null,
+        ?int $reviewedby = null,
+        int $reviewedat = 0
+    ): \stdClass {
         $this->capturedmicpid = $micpid;
         $this->captureduserid = $userid;
         $this->capturedrawjson = $rawjson;
@@ -111,6 +122,11 @@ final class testable_submission_repository extends submission_repository {
             'rawjson' => $rawjson,
             'clientmeta' => $clientmeta,
             'score' => $score,
+            'reviewstatus' => $reviewstatus,
+            'finalscore' => $finalscore,
+            'reviewjson' => $reviewjson,
+            'reviewedby' => $reviewedby,
+            'reviewedat' => $reviewedat,
             'timecreated' => time(),
             'timemodified' => time(),
         ];

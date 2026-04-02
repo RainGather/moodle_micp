@@ -22,7 +22,7 @@ require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->dirroot . '/mod/micp/classes/local/scoring_service.php');
 
 function micp_default_launch_path(): string {
-    return 'sample_content/demo.html';
+    return 'index.html';
 }
 
 function micp_resolve_launch_path(?string $launchpath): string {
@@ -287,12 +287,89 @@ function micp_evaluate(stdClass $micp, int $userid): array {
 }
 
 function micp_build_grade_entry(stdClass $micp, int $userid): stdClass {
+    $submission = micp_get_submission_record($micp, $userid);
     $evaluation = micp_evaluate($micp, $userid);
+    $rawgrade = micp_get_effective_raw_grade($micp, $submission, $evaluation);
 
     return (object) [
         'userid' => $userid,
-        'rawgrade' => $evaluation['rawgrade'],
+        'rawgrade' => $rawgrade,
     ];
+}
+
+function micp_get_submission_record(stdClass $micp, int $userid): ?stdClass {
+    global $DB;
+
+    return $DB->get_record('micp_submissions', [
+        'micpid' => $micp->id,
+        'userid' => $userid,
+    ]) ?: null;
+}
+
+function micp_get_review_data(?stdClass $submission): array {
+    if (!$submission || empty($submission->reviewjson)) {
+        return [];
+    }
+
+    $data = json_decode((string)$submission->reviewjson, true);
+
+    return is_array($data) ? $data : [];
+}
+
+function micp_get_effective_score_percent(?stdClass $submission, array $evaluation): ?int {
+    if ($submission && ($submission->reviewstatus ?? '') === 'pending') {
+        return null;
+    }
+
+    if ($submission && ($submission->reviewstatus ?? '') === 'reviewed' && $submission->finalscore !== null) {
+        return (int)$submission->finalscore;
+    }
+
+    return (int)($evaluation['score'] ?? 0);
+}
+
+function micp_get_effective_raw_grade(stdClass $micp, ?stdClass $submission, array $evaluation): ?float {
+    $score = micp_get_effective_score_percent($submission, $evaluation);
+
+    if ($score === null) {
+        return null;
+    }
+
+    return (float)round((micp_normalize_grade($micp->grade ?? null) * $score) / 100, 2);
+}
+
+function micp_extract_submission_actions(?stdClass $submission): array {
+    if (!$submission || empty($submission->rawjson)) {
+        return [];
+    }
+
+    $raw = json_decode((string)$submission->rawjson, true);
+    if (!is_array($raw)) {
+        return [];
+    }
+
+    $actions = $raw['raw']['actions'] ?? $raw['actions'] ?? [];
+
+    return is_array($actions) ? $actions : [];
+}
+
+function micp_get_latest_submission_actions_by_interactionid(?stdClass $submission): array {
+    $latest = [];
+
+    foreach (micp_extract_submission_actions($submission) as $action) {
+        if (!is_array($action)) {
+            continue;
+        }
+
+        $interactionid = trim((string)($action['interactionid'] ?? ''));
+        if ($interactionid === '') {
+            continue;
+        }
+
+        $latest[$interactionid] = $action;
+    }
+
+    return $latest;
 }
 
 function micp_get_graded_userids(int $micpid): array {
@@ -344,10 +421,7 @@ function micp_update_grades(stdClass $micp, int $userid = 0): int {
 function micp_get_user_result_summary(stdClass $micp, int $userid): array {
     global $DB;
 
-    $submission = $DB->get_record('micp_submissions', [
-        'micpid' => $micp->id,
-        'userid' => $userid,
-    ]);
+    $submission = micp_get_submission_record($micp, $userid);
 
     $hasinteraction = $DB->record_exists('micp_events', [
         'micpid' => $micp->id,
@@ -356,24 +430,60 @@ function micp_get_user_result_summary(stdClass $micp, int $userid): array {
     ]);
 
     $evaluation = micp_evaluate($micp, $userid);
+    $reviewdata = micp_get_review_data($submission);
     $grademax = micp_normalize_grade($micp->grade ?? null);
     $submitted = !empty($submission);
+    $effectivescore = micp_get_effective_score_percent($submission, $evaluation);
+    $effectiverawgrade = micp_get_effective_raw_grade($micp, $submission, $evaluation);
+    $reviewstatus = $submission->reviewstatus ?? 'not_required';
+
+    if (!$submitted) {
+        $statuslabel = get_string('notsubmitted', 'mod_micp');
+        $statusclass = 'pending';
+        $reviewstatuslabel = get_string('reviewstatusnotapplicable', 'mod_micp');
+    } else if ($reviewstatus === 'pending') {
+        $statuslabel = get_string('pendingteacherreview', 'mod_micp');
+        $statusclass = 'pending-review';
+        $reviewstatuslabel = get_string('reviewstatuspending', 'mod_micp');
+    } else if ($reviewstatus === 'reviewed') {
+        $statuslabel = get_string('reviewedbyteacher', 'mod_micp');
+        $statusclass = 'reviewed';
+        $reviewstatuslabel = get_string('reviewstatusreviewed', 'mod_micp');
+    } else {
+        $statuslabel = get_string('submitted', 'mod_micp');
+        $statusclass = 'submitted';
+        $reviewstatuslabel = get_string('reviewstatusnotrequired', 'mod_micp');
+    }
 
     return [
         'submitted' => $submitted,
-        'statuslabel' => $submitted ? 'Submitted' : 'Not submitted yet',
-        'statusclass' => $submitted ? 'submitted' : 'pending',
+        'statuslabel' => $statuslabel,
+        'statusclass' => $statusclass,
+        'reviewstatus' => $reviewstatus,
+        'reviewstatuslabel' => $reviewstatuslabel,
         'hasinteraction' => $hasinteraction,
-        'interactionslabel' => $hasinteraction ? 'Interaction recorded' : 'No interaction recorded yet',
-        'scorelabel' => (string)($evaluation['score'] ?? 0),
-        'rawgradelabel' => (string)($evaluation['rawgrade'] ?? 0),
+        'interactionslabel' => $hasinteraction ? get_string('interactionrecorded', 'mod_micp') : get_string('nointeractionrecorded', 'mod_micp'),
+        'scorelabel' => $effectivescore === null ? get_string('pendingreviewshort', 'mod_micp') : (string)$effectivescore,
+        'rawgradelabel' => $effectiverawgrade === null ? get_string('pendingreviewshort', 'mod_micp') : format_float($effectiverawgrade, 2),
         'grademaxlabel' => (string)$grademax,
         'showsubmittedat' => $submitted && !empty($submission->timemodified),
         'submittedatlabel' => $submitted && !empty($submission->timemodified) ? userdate((int)$submission->timemodified) : '',
-        'details' => array_map(static function(array $detail): array {
+        'details' => array_map(static function(array $detail) use ($reviewdata): array {
+            $reviewitem = $reviewdata['items'][$detail['interactionid'] ?? ''] ?? [];
+            $isreviewedmanual = ($detail['gradingmode'] ?? 'auto') === 'manual' && array_key_exists('score', $reviewitem);
+            $scorelabel = format_float((float)($detail['earned'] ?? 0), 2) . ' / ' . format_float((float)($detail['max'] ?? 0), 2);
+
+            if (($detail['gradingmode'] ?? 'auto') === 'manual') {
+                if ($isreviewedmanual) {
+                    $scorelabel = format_float((float)$reviewitem['score'], 2) . ' / ' . format_float((float)($detail['max'] ?? 0), 2);
+                } else if (!empty($detail['manualreviewrequired'])) {
+                    $scorelabel = get_string('pendingreviewdetail', 'mod_micp') . ' / ' . format_float((float)($detail['max'] ?? 0), 2);
+                }
+            }
+
             return [
                 'label' => (string)($detail['label'] ?? $detail['interactionid'] ?? 'Interaction'),
-                'scorelabel' => format_float((float)($detail['earned'] ?? 0), 2) . ' / ' . format_float((float)($detail['max'] ?? 0), 2),
+                'scorelabel' => $scorelabel,
                 'complete' => !empty($detail['complete']),
             ];
         }, $evaluation['details'] ?? []),
@@ -419,17 +529,22 @@ function micp_get_participant_report_rows(stdClass $micp, $cm, context_module $c
         $grade = micp_get_user_grade_record($micp, (int)$user->id);
         $rawgrade = $grade && $grade->rawgrade !== null ? format_float((float)$grade->rawgrade, 2) : get_string('nograderecord', 'mod_micp');
         $finalgrade = $grade && $grade->finalgrade !== null ? format_float((float)$grade->finalgrade, 2) : get_string('nograderecord', 'mod_micp');
+        $reviewurl = new moodle_url('/mod/micp/review.php', ['id' => $cm->id, 'userid' => $user->id]);
 
         $rows[] = [
             'fullname' => fullname($user),
             'submissionstatus' => $summary['submitted'] ? get_string('submitted', 'mod_micp') : get_string('notsubmitted', 'mod_micp'),
+            'reviewstatus' => $summary['reviewstatuslabel'],
             'lastsubmission' => $summary['showsubmittedat'] ? $summary['submittedatlabel'] : get_string('never', 'mod_micp'),
-            'activityscore' => $summary['scorelabel'] . '%',
+            'activityscore' => is_numeric($summary['scorelabel']) ? $summary['scorelabel'] . '%' : $summary['scorelabel'],
             'grade' => $rawgrade . ' / ' . $summary['grademaxlabel'],
             'finalgrade' => $finalgrade,
             'interactionbreakdown' => implode(', ', array_map(static function(array $detail): string {
                 return ($detail['label'] ?? 'Interaction') . ': ' . ($detail['scorelabel'] ?? '0 / 0');
             }, $summary['details'] ?? [])),
+            'reviewaction' => $summary['submitted'] && ($summary['reviewstatus'] ?? '') !== 'not_required'
+                ? html_writer::link($reviewurl, get_string('reviewsubmission', 'mod_micp'))
+                : '',
         ];
     }
 

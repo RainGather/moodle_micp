@@ -74,19 +74,30 @@ class scoring_service {
         $totalearned = 0.0;
         $totalmax = 0.0;
         $details = [];
+        $needsmanualreview = false;
 
         foreach ($config['interactions'] as $interactionid => $item) {
             $payload = $latestbyinteraction[$interactionid] ?? null;
-            $earned = $this->score_interaction($item, $payload);
             $weight = (float)$item['weight'];
+            $gradingmode = $item['gradingmode'] ?? 'auto';
+            $ismanuallygraded = $gradingmode === 'manual';
+            $earned = $ismanuallygraded ? 0.0 : $this->score_interaction($item, $payload);
+
             $totalearned += $earned;
             $totalmax += $weight;
+
+            if ($ismanuallygraded && $payload !== null) {
+                $needsmanualreview = true;
+            }
+
             $details[] = [
                 'interactionid' => $interactionid,
                 'label' => $item['label'],
                 'earned' => $earned,
                 'max' => $weight,
                 'complete' => $payload !== null,
+                'gradingmode' => $gradingmode,
+                'manualreviewrequired' => $ismanuallygraded && $payload !== null,
             ];
         }
 
@@ -99,6 +110,7 @@ class scoring_service {
             'rawgrade' => max(0, $rawgrade),
             'details' => $details,
             'configvalid' => true,
+            'needsmanualreview' => $needsmanualreview,
         ];
     }
 

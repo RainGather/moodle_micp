@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "aggregation": {
+    "method": "sum",
+    "maxscore": 100
+  },
+  "interactions": [
+    {
+      "id": "sampling_best_choice",
+      "label": "Balanced sampling choice",
+      "type": "choice",
+      "weight": 25,
+      "scoring": {
+        "correct": "64"
+      }
+    },
+    {
+      "id": "pixelation_cause_choice",
+      "label": "Pixelation cause",
+      "type": "choice",
+      "weight": 25,
+      "scoring": {
+        "correct": "large_pixels"
+      }
+    },
+    {
+      "id": "grayscale_level_choice",
+      "label": "Grayscale level count",
+      "type": "choice",
+      "weight": 25,
+      "scoring": {
+        "correct": "4"
+      }
+    },
+    {
+      "id": "quality_filesize_reflection",
+      "label": "Quality and file size recommendation",
+      "type": "text",
+      "weight": 25,
+      "gradingmode": "manual",
+      "scoring": {
+        "requireNonEmpty": true
+      }
+    }
+  ]
+}

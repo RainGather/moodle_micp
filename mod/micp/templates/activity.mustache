@@ -1,38 +1,48 @@
 <section class="mod-micp-activity" data-region="mod-micp-activity">
     <h2>{{name}}</h2>
     {{{intro}}}
-    <div class="mod-micp-activity__summary" style="margin: 1rem 0; padding: 1rem; border: 1px solid #d8dee9; border-radius: 0.75rem; background: #f8fafc;">
+    <div class="mod-micp-activity__summary" data-region="mod-micp-result-summary" style="margin: 1rem 0; padding: 1rem; border: 1px solid #d8dee9; border-radius: 0.75rem; background: #f8fafc;">
         <h3 style="margin-top: 0;">Your activity result</h3>
-        <p style="margin-bottom: 0.5rem;"><strong>Status:</strong> {{resultsummary.statuslabel}}</p>
-        <p style="margin-bottom: 0.5rem;"><strong>Activity score:</strong> {{resultsummary.scorelabel}}%</p>
-        <p style="margin-bottom: 0.5rem;"><strong>Grade:</strong> {{resultsummary.rawgradelabel}} / {{resultsummary.grademaxlabel}}</p>
-        <p style="margin-bottom: 0.5rem;"><strong>Interaction state:</strong> {{resultsummary.interactionslabel}}</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Status:</strong> <span data-field="status">{{resultsummary.statuslabel}}</span></p>
+        <p style="margin-bottom: 0.5rem;"><strong>Activity score:</strong> <span data-field="score">{{resultsummary.scorelabel}}</span>%</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Grade:</strong> <span data-field="rawgrade">{{resultsummary.rawgradelabel}}</span> / <span data-field="grademax">{{resultsummary.grademaxlabel}}</span></p>
+        <p style="margin-bottom: 0.5rem;"><strong>Interaction state:</strong> <span data-field="interactions">{{resultsummary.interactionslabel}}</span></p>
         {{#resultsummary.showsubmittedat}}
-            <p style="margin-bottom: 0;"><strong>Last submitted:</strong> {{resultsummary.submittedatlabel}}</p>
+            <p data-region="mod-micp-submitted-at" style="margin-bottom: 0;"><strong>Last submitted:</strong> <span data-field="submittedat">{{resultsummary.submittedatlabel}}</span></p>
+        {{/resultsummary.showsubmittedat}}
+        {{^resultsummary.showsubmittedat}}
+            <p data-region="mod-micp-submitted-at" style="margin-bottom: 0; display: none;"><strong>Last submitted:</strong> <span data-field="submittedat"></span></p>
         {{/resultsummary.showsubmittedat}}
         {{#resultsummary.showdetails}}
-            <div style="margin-top: 1rem;">
+            <div data-region="mod-micp-result-details" style="margin-top: 1rem;">
                 <strong>Interaction breakdown:</strong>
-                <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
+                <ul data-region="mod-micp-result-details-list" style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
                     {{#resultsummary.details}}
                         <li>{{label}} — {{scorelabel}}</li>
                     {{/resultsummary.details}}
                 </ul>
             </div>
         {{/resultsummary.showdetails}}
+        {{^resultsummary.showdetails}}
+            <div data-region="mod-micp-result-details" style="margin-top: 1rem; display: none;">
+                <strong>Interaction breakdown:</strong>
+                <ul data-region="mod-micp-result-details-list" style="margin: 0.5rem 0 0 1.25rem; padding: 0;"></ul>
+            </div>
+        {{/resultsummary.showdetails}}
         {{#canviewreports}}
             <p style="margin: 1rem 0 0;"><a href="{{reporturl}}">View results</a></p>
         {{/canviewreports}}
     </div>
-    <div class="mod-micp-activity__frame" data-region="mod-micp-iframe-container">
+    <div class="mod-micp-activity__frame" data-region="mod-micp-iframe-container" style="width: 100%; overflow: hidden;">
         <iframe
             id="{{iframeid}}"
             src="{{iframesrc}}"
             title="{{iframetitle}}"
             loading="eager"
             referrerpolicy="same-origin"
+            data-region="mod-micp-iframe"
             data-launch-path="{{launchpath}}"
-            style="width: 100%; min-height: 720px; border: 0;"
+            style="display: block; width: 100%; min-height: 480px; border: 0; overflow: hidden;"
         ></iframe>
     </div>
 </section>

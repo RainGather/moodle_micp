@@ -50,11 +50,13 @@ $table = new html_table();
 $table->head = [
     get_string('participant', 'mod_micp'),
     get_string('submissionstatus', 'mod_micp'),
+    get_string('reviewstatus', 'mod_micp'),
     get_string('lastsubmission', 'mod_micp'),
     get_string('activityscore', 'mod_micp'),
     get_string('interactionbreakdown', 'mod_micp'),
     get_string('grade', 'mod_micp'),
     get_string('grade'),
+    get_string('reviewaction', 'mod_micp'),
 ];
 $table->data = [];
 
@@ -62,11 +64,13 @@ foreach ($rows as $row) {
     $table->data[] = [
         s($row['fullname']),
         s($row['submissionstatus']),
+        s($row['reviewstatus']),
         s($row['lastsubmission']),
         s($row['activityscore']),
         s($row['interactionbreakdown']),
         s($row['grade']),
         s($row['finalgrade']),
+        $row['reviewaction'],
     ];
 }
 

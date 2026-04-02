@@ -39,11 +39,16 @@ class scoring_config {
             }
 
             $weight = (float)($interaction['weight'] ?? 0);
+            $gradingmode = trim((string)($interaction['gradingmode'] ?? 'auto'));
+            if ($gradingmode !== 'manual') {
+                $gradingmode = 'auto';
+            }
             $items[$id] = [
                 'id' => $id,
                 'label' => trim((string)($interaction['label'] ?? $id)),
                 'weight' => $weight > 0 ? $weight : 0,
                 'type' => trim((string)($interaction['type'] ?? 'presence')),
+                'gradingmode' => $gradingmode,
                 'scoring' => is_array($interaction['scoring'] ?? null) ? $interaction['scoring'] : [],
             ];
         }

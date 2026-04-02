@@ -12,7 +12,7 @@
                 <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
                 <FIELD NAME="grade" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="100" SEQUENCE="false"/>
-                <FIELD NAME="launchpath" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="sample_content/demo.html" SEQUENCE="false"/>
+                <FIELD NAME="launchpath" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="index.html" SEQUENCE="false"/>
                 <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
             </FIELDS>
             <KEYS>
@@ -52,6 +52,11 @@
                 <FIELD NAME="rawjson" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="clientmeta" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="score" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="reviewstatus" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="not_required" SEQUENCE="false"/>
+                <FIELD NAME="finalscore" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="reviewjson" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="reviewedby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="reviewedat" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
                 <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
             </FIELDS>
@@ -59,10 +64,12 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="micpfk" TYPE="foreign" FIELDS="micpid" REFTABLE="micp" REFFIELDS="id"/>
                 <KEY NAME="userfk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="reviewerfk" TYPE="foreign" FIELDS="reviewedby" REFTABLE="user" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
                 <INDEX NAME="micpid-userid" UNIQUE="true" FIELDS="micpid, userid"/>
                 <INDEX NAME="micpid" UNIQUE="false" FIELDS="micpid"/>
+                <INDEX NAME="reviewstatus" UNIQUE="false" FIELDS="reviewstatus"/>
             </INDEXES>
         </TABLE>
     </TABLES>

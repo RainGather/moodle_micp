@@ -5,6 +5,7 @@ define(['core/ajax'], function(Ajax) {
         CONTEXT: 'context',
         EVENT: 'event',
         SUBMIT: 'submit',
+        RESIZE: 'resize',
         SUBMIT_RESULT: 'submit_result',
         SUBMIT_ERROR: 'submit_error'
     };
@@ -74,6 +75,83 @@ define(['core/ajax'], function(Ajax) {
         return 'Submission failed. Please try again.';
     }
 
+    function setText(container, selector, value) {
+        var node;
+
+        if (!container) {
+            return;
+        }
+
+        node = container.querySelector(selector);
+
+        if (node) {
+            node.textContent = String(value || '');
+        }
+    }
+
+    function updateResultSummary(summary) {
+        var activity;
+        var container;
+        var submittedAt;
+        var detailsRegion;
+        var detailsList;
+
+        if (!isPlainObject(summary)) {
+            return;
+        }
+
+        activity = document.querySelector('[data-region="mod-micp-activity"]');
+
+        if (!activity) {
+            return;
+        }
+
+        container = activity.querySelector('[data-region="mod-micp-result-summary"]');
+
+        if (!container) {
+            return;
+        }
+
+        setText(container, '[data-field="status"]', summary.statuslabel);
+        setText(container, '[data-field="score"]', summary.scorelabel);
+        setText(container, '[data-field="rawgrade"]', summary.rawgradelabel);
+        setText(container, '[data-field="grademax"]', summary.grademaxlabel);
+        setText(container, '[data-field="interactions"]', summary.interactionslabel);
+        setText(container, '[data-field="submittedat"]', summary.submittedatlabel);
+
+        submittedAt = container.querySelector('[data-region="mod-micp-submitted-at"]');
+        if (submittedAt) {
+            submittedAt.style.display = summary.showsubmittedat ? '' : 'none';
+        }
+
+        detailsRegion = container.querySelector('[data-region="mod-micp-result-details"]');
+        detailsList = container.querySelector('[data-region="mod-micp-result-details-list"]');
+        if (detailsRegion && detailsList) {
+            detailsList.innerHTML = '';
+
+            if (summary.showdetails && Array.isArray(summary.details) && summary.details.length) {
+                summary.details.forEach(function(detail) {
+                    var item = document.createElement('li');
+                    item.textContent = String(detail.label || 'Interaction') + ' — ' + String(detail.scorelabel || '');
+                    detailsList.appendChild(item);
+                });
+                detailsRegion.style.display = '';
+            } else {
+                detailsRegion.style.display = 'none';
+            }
+        }
+    }
+
+    function applyIframeHeight(height) {
+        var resolvedHeight = Number(height) || 0;
+
+        if (!state.iframe || resolvedHeight <= 0) {
+            return;
+        }
+
+        state.iframe.style.height = Math.max(480, resolvedHeight) + 'px';
+    }
+
     function handleEvent(payload) {
         if (!payload.type) {
             return;
@@ -95,6 +173,10 @@ define(['core/ajax'], function(Ajax) {
                 clientts: payload.clientts || null
             })
         }).then(function(result) {
+            if (result && isPlainObject(result.resultsummary)) {
+                updateResultSummary(result.resultsummary);
+            }
+
             postToIframe(MESSAGE_TYPES.SUBMIT_RESULT, {
                 result: cloneValue(result || {})
             });
@@ -140,6 +222,13 @@ define(['core/ajax'], function(Ajax) {
             };
         }
 
+        if (data.type === MESSAGE_TYPES.RESIZE && typeof payload.height !== 'undefined') {
+            return {
+                type: MESSAGE_TYPES.RESIZE,
+                payload: payload
+            };
+        }
+
         return null;
     }
 
@@ -164,6 +253,11 @@ define(['core/ajax'], function(Ajax) {
 
         if (message.type === MESSAGE_TYPES.SUBMIT) {
             handleSubmit(message.payload);
+            return;
+        }
+
+        if (message.type === MESSAGE_TYPES.RESIZE) {
+            applyIframeHeight(message.payload.height);
         }
     }
 

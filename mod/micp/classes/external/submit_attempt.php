@@ -72,6 +72,7 @@ class submit_attempt extends \external_api {
             'rawgrade' => (int) ($evaluation['rawgrade'] ?? 0),
             'timemodified' => (int) $submission->timemodified,
             'gradeupdated' => (int) $result['gradeupdatestatus'] === \GRADE_UPDATE_OK,
+            'resultsummary' => self::normalise_result_summary(\micp_get_user_result_summary($resolved['micp'], (int) $USER->id)),
         ];
     }
 
@@ -83,7 +84,48 @@ class submit_attempt extends \external_api {
             'rawgrade' => new \external_value(\PARAM_INT, 'Server-computed gradebook raw grade'),
             'timemodified' => new \external_value(\PARAM_INT, 'Server modification timestamp'),
             'gradeupdated' => new \external_value(\PARAM_BOOL, 'Whether gradebook update reported success'),
+            'resultsummary' => new \external_single_structure([
+                'submitted' => new \external_value(\PARAM_BOOL, 'Whether the attempt has been submitted'),
+                'statuslabel' => new \external_value(\PARAM_TEXT, 'Submission status label'),
+                'statusclass' => new \external_value(\PARAM_ALPHANUMEXT, 'Submission status class'),
+                'hasinteraction' => new \external_value(\PARAM_BOOL, 'Whether any interaction has been recorded'),
+                'interactionslabel' => new \external_value(\PARAM_TEXT, 'Interaction state label'),
+                'scorelabel' => new \external_value(\PARAM_TEXT, 'Visible score label'),
+                'rawgradelabel' => new \external_value(\PARAM_TEXT, 'Visible raw grade label'),
+                'grademaxlabel' => new \external_value(\PARAM_TEXT, 'Visible grade max label'),
+                'showsubmittedat' => new \external_value(\PARAM_BOOL, 'Whether submitted-at should be shown'),
+                'submittedatlabel' => new \external_value(\PARAM_TEXT, 'Submitted-at label'),
+                'details' => new \external_multiple_structure(new \external_single_structure([
+                    'label' => new \external_value(\PARAM_TEXT, 'Detail label'),
+                    'scorelabel' => new \external_value(\PARAM_TEXT, 'Detail score label'),
+                    'complete' => new \external_value(\PARAM_BOOL, 'Whether the detail is complete'),
+                ]), 'Interaction breakdown items'),
+                'showdetails' => new \external_value(\PARAM_BOOL, 'Whether details should be shown'),
+            ]),
         ]);
+    }
+
+    private static function normalise_result_summary(array $summary): array {
+        return [
+            'submitted' => !empty($summary['submitted']),
+            'statuslabel' => (string) ($summary['statuslabel'] ?? ''),
+            'statusclass' => (string) ($summary['statusclass'] ?? ''),
+            'hasinteraction' => !empty($summary['hasinteraction']),
+            'interactionslabel' => (string) ($summary['interactionslabel'] ?? ''),
+            'scorelabel' => (string) ($summary['scorelabel'] ?? ''),
+            'rawgradelabel' => (string) ($summary['rawgradelabel'] ?? ''),
+            'grademaxlabel' => (string) ($summary['grademaxlabel'] ?? ''),
+            'showsubmittedat' => !empty($summary['showsubmittedat']),
+            'submittedatlabel' => (string) ($summary['submittedatlabel'] ?? ''),
+            'details' => array_map(static function(array $detail): array {
+                return [
+                    'label' => (string) ($detail['label'] ?? ''),
+                    'scorelabel' => (string) ($detail['scorelabel'] ?? ''),
+                    'complete' => !empty($detail['complete']),
+                ];
+            }, $summary['details'] ?? []),
+            'showdetails' => !empty($summary['showdetails']),
+        ];
     }
 
     private static function assert_valid_json(string $json, string $fieldname): void {
