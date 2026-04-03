@@ -30,6 +30,7 @@ If you nest the lesson, keep **all referenced assets relative to that nested `in
 | Non-empty | `"requireNonEmpty": true` | `response: "any text"` |
 | Completed | `"completed": true` | `response: "revealed"` |
 | Presence only | `{}` (empty) | any non-null response |
+| Manual review | `"gradingmode": "manual"` | `response: "free response"` |
 
 ## interactionid Rules
 
@@ -47,7 +48,7 @@ window.MICP.init({ source: 'my-lesson' });
 window.MICP.sendEvent('interaction', {
   interactionid: 'my_id',
   response: 'user_response_value',
-  outcome: 'correct|incorrect|selected|adjusted|completed',
+  outcome: 'selected|adjusted|completed|saved|submitted',
   sequence: actions.length + 1,
   // ... any extra fields
 });
@@ -91,6 +92,7 @@ Each step's HTML has `id="step-N"` and `data-step="N"`.
 - Cover empty, loading, saved, and error states when the lesson needs them.
 - Keep the lesson browser-friendly and responsive; do not mimic a native app shell.
 - Never let styling interfere with MICP hooks, interaction IDs, or submission behavior.
+- Do not reveal correct/incorrect to the learner immediately by default.
 
 ## Template Placeholders (in index.html template)
 

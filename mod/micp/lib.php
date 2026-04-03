@@ -482,6 +482,7 @@ function micp_get_user_result_summary(stdClass $micp, int $userid): array {
             }
 
             return [
+                'interactionid' => (string)($detail['interactionid'] ?? ''),
                 'label' => (string)($detail['label'] ?? $detail['interactionid'] ?? 'Interaction'),
                 'scorelabel' => $scorelabel,
                 'complete' => !empty($detail['complete']),
@@ -539,6 +540,7 @@ function micp_get_participant_report_rows(stdClass $micp, $cm, context_module $c
             'activityscore' => is_numeric($summary['scorelabel']) ? $summary['scorelabel'] . '%' : $summary['scorelabel'],
             'grade' => $rawgrade . ' / ' . $summary['grademaxlabel'],
             'finalgrade' => $finalgrade,
+            'interactiondetails' => array_values($summary['details'] ?? []),
             'interactionbreakdown' => implode(', ', array_map(static function(array $detail): string {
                 return ($detail['label'] ?? 'Interaction') . ': ' . ($detail['scorelabel'] ?? '0 / 0');
             }, $summary['details'] ?? [])),
@@ -549,4 +551,60 @@ function micp_get_participant_report_rows(stdClass $micp, $cm, context_module $c
     }
 
     return $rows;
+}
+
+function micp_get_report_interaction_columns(array $rows): array {
+    $columns = [];
+
+    foreach ($rows as $row) {
+        foreach (($row['interactiondetails'] ?? []) as $detail) {
+            $interactionid = trim((string)($detail['interactionid'] ?? ''));
+            if ($interactionid === '' || isset($columns[$interactionid])) {
+                continue;
+            }
+
+            $columns[$interactionid] = [
+                'interactionid' => $interactionid,
+                'label' => (string)($detail['label'] ?? $interactionid),
+            ];
+        }
+    }
+
+    return array_values($columns);
+}
+
+function micp_get_report_group_label($cm, int $groupid): string {
+    if (!groups_get_activity_groupmode($cm)) {
+        return get_string('groupmodedisabled', 'mod_micp');
+    }
+
+    if ($groupid <= 0) {
+        return get_string('allparticipantsgroup', 'mod_micp');
+    }
+
+    $group = groups_get_group($groupid);
+
+    return $group ? format_string($group->name) : get_string('allparticipantsgroup', 'mod_micp');
+}
+
+function micp_get_report_group_options(stdClass $course, $cm): array {
+    $groups = [];
+
+    if (function_exists('groups_get_activity_allowed_groups')) {
+        $groups = groups_get_activity_allowed_groups($cm);
+    }
+
+    if (empty($groups)) {
+        $groups = groups_get_all_groups($course->id, 0, $cm->groupingid ?? 0);
+    }
+
+    $options = [0 => get_string('allparticipantsgroup', 'mod_micp')];
+
+    foreach ($groups as $group) {
+        if (!empty($group->id)) {
+            $options[(int)$group->id] = format_string((string)$group->name);
+        }
+    }
+
+    return $options;
 }

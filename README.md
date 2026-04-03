@@ -48,6 +48,10 @@ The AI will generate:
 
 ZIP it → upload to mod_micp → students get a self-grading lesson.
 
+The bundled Skill now also supports:
+- **neutral learner feedback by default** — no immediate right/wrong hints unless explicitly requested
+- **manual-review items** via `gradingmode: "manual"` for subjective responses
+
 Full Skill documentation: [`.skills/micp-html-authoring/SKILL.md`](.skills/micp-html-authoring/SKILL.md)
 
 ---
@@ -60,6 +64,11 @@ Full Skill documentation: [`.skills/micp-html-authoring/SKILL.md`](.skills/micp-
 | Grading | Manual | Automatic → gradebook |
 | Lesson type | Fixed templates | Any HTML interactive design |
 | Maintenance | Per-student feedback | Server-side scoring |
+
+For mixed objective + subjective lessons, mod_micp also supports **hybrid grading**:
+- objective items auto-score immediately
+- subjective/manual items stay **pending teacher review**
+- teachers can review and finalize grades inside the activity report
 
 ---
 
@@ -82,6 +91,11 @@ AI generates package          Plugin delivers lesson
 - **Client SDK** (`window.MICP`): fires events, submits — never computes a score
 - **Server-side scoring**: reads `micp-scoring.json` rules, returns grade
 - **Gradebook**: via Moodle's official `grade_update()` API
+
+Teacher-facing reporting includes:
+- one column per interaction / scoring point
+- explicit group filtering on the results page
+- manual review workflow for subjective responses
 
 ---
 
@@ -147,6 +161,35 @@ const ctx = MICP.getContext();                         // { cmid, userid, sesske
 
 - `all_or_nothing` — all rules satisfied = 100, else 0
 - `proportional` — partial credit by rule weight
+
+### Hybrid Manual Review
+
+`micp-scoring.json` can mark an interaction for teacher review:
+
+```json
+{
+  "id": "reflection_text",
+  "label": "Short reflection",
+  "type": "text",
+  "weight": 20,
+  "gradingmode": "manual",
+  "scoring": {
+    "requireNonEmpty": true
+  }
+}
+```
+
+Behavior:
+- objective items auto-score on submit
+- manual items set the submission to **Pending review**
+- teachers open the report, review the response, assign points, and finalize the grade
+
+### Results Report
+
+The activity report includes:
+- one column per interaction instead of one collapsed breakdown cell
+- explicit group dropdown filtering
+- review links for submissions that require manual grading
 
 ### Capabilities
 

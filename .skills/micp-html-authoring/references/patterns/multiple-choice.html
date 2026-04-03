@@ -1,20 +1,15 @@
 /* ================================================================
    PATTERN: Multiple Choice Interaction
    ================================================================
-   Choice interaction with immediate correct/incorrect feedback.
+   Choice interaction with neutral selection feedback.
    Design note: options should be easy to scan and compare, with concise labels and helpful descriptions.
 
    HTML: One .option-grid container with .option-button children.
    Each button has: data-group, data-id (interactionid), data-response.
 
-   JS: Add to attachChoiceHandlers() with your specific logic:
-   if (interactionid === '{{CORRECT_INTERACTION_ID}}') {
-     isCorrect = response === '{{CORRECT_RESPONSE}}';
-     correctText = '{{CORRECT_FEEDBACK}}';
-     wrongText = '{{WRONG_FEEDBACK}}';
-   }
+   JS: Record the selection and acknowledge it neutrally.
 
-   GRADED: requires entry in micp-scoring.json with "correct" rule.
+   GRADED: may still use a "correct" rule in micp-scoring.json, but the UI should not reveal correctness immediately by default.
    UNGRADED: change interactionid or omit from scoring config.
    ================================================================ */
 
@@ -38,9 +33,8 @@
 <div class="feedback" id="my-feedback"></div>
 
 CSS (already in template):
-.option-button[data-state="correct"] { border-color: rgba(127,255,212,0.48); background: rgba(127,255,212,0.08); }
-.option-button[data-state="wrong"] { border-color: rgba(255,143,143,0.5); background: rgba(255,143,143,0.08); }
+.option-button[data-state="selected"] { border-color: rgba(143,234,255,0.48); background: rgba(143,234,255,0.08); }
 .feedback { min-height: 1.5rem; color: var(--color-muted); }
 
-Keep one selection path visually primary and avoid extra buttons that compete with the question.
+Keep one selection path visually primary and avoid extra buttons that compete with the question. Prefer feedback such as “Answer recorded” or “Selection saved”.
 */

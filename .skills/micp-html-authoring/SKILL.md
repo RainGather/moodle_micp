@@ -69,7 +69,7 @@ window.MICP.init({ source: 'your-lesson-name' });
 window.MICP.sendEvent('interaction', {
   interactionid: 'your_stable_id',   // must match micp-scoring.json
   response: 'user_response_value',    // what the learner did/chose/typed
-  outcome: 'correct|incorrect|selected|adjusted|completed|saved',
+  outcome: 'selected|adjusted|completed|saved|submitted',
   sequence: actions.length + 1,
 });
 
@@ -91,13 +91,27 @@ Every `interactionid` in `micp-scoring.json` **must** appear in `index.html` pay
 { "scoring": { "requireNonEmpty": true } }  // any non-blank text
 { "scoring": { "completed": true } }        // presence counts
 { "scoring": {} }                            // pure presence (no rules)
+{ "gradingmode": "manual", "scoring": { "requireNonEmpty": true } } // subjective/manual-review item
 ```
+
+## Learner Feedback Rule
+
+**Do not reveal right/wrong immediately in the learner-facing UI unless the user explicitly asks for instant evaluative feedback.**
+
+Default behavior:
+- show neutral confirmation such as **Answer recorded**, **Response saved**, **Step complete**, or **Ready to continue**
+- keep selection states visually clear without coloring them as correct/incorrect
+- let the server or teacher determine correctness later
+
+This is especially important for choice interactions. A generated lesson must not make brute-force clicking the fastest path to the answer.
+
+For subjective responses, prefer `gradingmode: "manual"` so the lesson captures evidence for later teacher review instead of pretending it can auto-grade nuanced free text.
 
 ## Output Structure Per Lesson Type
 
 ### 1. Progressive Disclosure Lesson (multi-step, recommended)
 
-Sequential steps that unlock one-by-one. Steps unlock when the graded interaction in the previous step is recorded.
+Sequential steps that unlock one-by-one. Steps unlock when the required interaction in the previous step is recorded or saved.
 
 **HTML structure:**
 ```html
@@ -165,7 +179,7 @@ Show a canvas animation, then ask a single-choice question about it.
 
 1. **Understand the topic and learning goal** — ask if unclear
 2. **Plan the interface system** — define a lightweight visual direction before writing HTML: hierarchy, palette, typography scale, spacing rhythm, icon style, motion limits, and anti-patterns
-3. **Plan interactions** — list each graded interaction with its `interactionid`, type, and scoring rule
+3. **Plan interactions** — list each graded interaction with its `interactionid`, type, whether it is `auto` or `manual`, and its scoring/review rule
 4. **Assign weights** — weights sum to your `maxscore` (usually 100); distribute by importance
 5. **Generate** `index.html` and `micp-scoring.json` together
 6. **Cross-check**: every `interactionid` in scoring config appears in HTML event payloads
@@ -192,6 +206,7 @@ When generating lesson UI:
 - Include clear **empty, loading, saved, success, and error states** where the interaction needs them. Feedback should be calm, specific, and actionable.
 - Keep visuals purposeful. Charts, diagrams, and hero visuals should explain the concept, not just decorate the page.
 - Maintain a consistent visual rhythm: strong heading hierarchy, concise copy blocks, generous spacing, and repeatable card patterns.
+- Default learner feedback to neutral capture/progress language, not correctness revelation.
 
 ## Anti-Patterns to Avoid
 
@@ -204,6 +219,8 @@ Do **not** generate any of these unless the user explicitly asks for them and th
 - Emoji-driven UI in place of proper labels, icons, or diagrams
 - Dense dashboards that bury the learning interaction under metrics or status widgets
 - Styling changes that obscure interaction IDs, feedback states, or submit behavior
+- Immediate correct/incorrect feedback that lets students brute-force the answer
+- Correct/incorrect colors, badges, or messages shown before final submission or teacher review by default
 
 ## Bundle Resources
 
@@ -246,6 +263,8 @@ Before finishing, verify ALL of these:
 - [ ] All paths are relative (ZIP-safe — no absolute URLs)
 - [ ] If the package is nested, `index.html` and `assets/` still line up via relative paths
 - [ ] Language attribute set correctly (`lang="en"` or `lang="zh"`)
+- [ ] No immediate right/wrong learner feedback unless explicitly requested by the user
+- [ ] Subjective prompts use `gradingmode: "manual"` when teacher review is appropriate
 
 ## Styling System
 

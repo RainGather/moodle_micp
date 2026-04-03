@@ -48,6 +48,10 @@ AI 会自动生成：
 
 ZIP 打包 → 上传到 mod_micp → 学生获得一套自动评分的互动课件。
 
+当前附带的 Skill 还支持：
+- **默认中性反馈** —— 除非明确要求，否则不会立刻告诉学生对错
+- **主观题人工批改** —— 通过 `gradingmode: "manual"` 标记需要教师复核的题目
+
 详细文档：[`.skills/micp-html-authoring/SKILL.md`](.skills/micp-html-authoring/SKILL.md)
 
 ---
@@ -60,6 +64,38 @@ ZIP 打包 → 上传到 mod_micp → 学生获得一套自动评分的互动课
 | 评分 | 手动批改 | 自动 → gradebook |
 | 课件类型 | 固定模板 | 任意 HTML 互动设计 |
 | 维护 | 逐个学生反馈 | 服务端评分 |
+
+对于“客观题 + 主观题”的混合课件，mod_micp 还支持 **混合评分**：
+- 客观题立即自动评分
+- 主观题进入 **待教师批改**
+- 教师在活动报告中批改并发布最终成绩
+
+---
+
+## 工作方式
+
+```
+AI 生成课件包             插件承载与评分
+      ↓                        ↓
+[index.html] + [micp-scoring.json] → 学生打开活动
+                                     ↓
+                                学生互动
+                                MICP.sendEvent() → 服务器
+                                     ↓
+                                学生点击“提交”
+                                MICP.submit() → 评分
+                                     ↓
+                                grade_update() → Moodle 成绩册
+```
+
+- **客户端 SDK**（`window.MICP`）：负责发送事件和提交，不在前端算分
+- **服务端评分**：读取 `micp-scoring.json`，返回成绩
+- **成绩册写入**：通过 Moodle 官方 `grade_update()` API
+
+教师端报告支持：
+- 每个 interaction / 成绩点独立成列
+- 按小组筛选结果
+- 对主观题进行人工批改
 
 ---
 
@@ -125,6 +161,35 @@ const ctx = MICP.getContext();                         // { cmid, userid, sesske
 
 - `all_or_nothing` — 全部规则满足 = 100 分，否则 0 分
 - `proportional` — 按规则权重给部分分
+
+### 混合人工批改
+
+`micp-scoring.json` 可以把某个 interaction 标记成教师复核：
+
+```json
+{
+  "id": "reflection_text",
+  "label": "简短反思",
+  "type": "text",
+  "weight": 20,
+  "gradingmode": "manual",
+  "scoring": {
+    "requireNonEmpty": true
+  }
+}
+```
+
+行为如下：
+- 客观题提交后立即自动评分
+- 主观题会让提交状态变成 **待批改**
+- 教师进入 report 后可以逐项打分并发布最终成绩
+
+### 成绩报告
+
+活动 report 现在支持：
+- 每个 interaction 单独成列，不再挤在一个 breakdown 里
+- 显式的小组下拉筛选
+- 对需要人工批改的提交显示 Review 入口
 
 ### 权限定义
 
