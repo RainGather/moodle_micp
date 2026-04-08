@@ -33,16 +33,32 @@
             <p style="margin: 1rem 0 0;"><a href="{{reporturl}}">View results</a></p>
         {{/canviewreports}}
     </div>
-    <div class="mod-micp-activity__frame" data-region="mod-micp-iframe-container" style="width: 100%; overflow: hidden;">
-        <iframe
-            id="{{iframeid}}"
-            src="{{iframesrc}}"
-            title="{{iframetitle}}"
-            loading="eager"
-            referrerpolicy="same-origin"
-            data-region="mod-micp-iframe"
-            data-launch-path="{{launchpath}}"
-            style="display: block; width: 100%; min-height: 480px; border: 0; overflow: hidden;"
-        ></iframe>
+    <div class="mod-micp-activity__display">
+        <div class="mod-micp-activity__toolbar" data-region="mod-micp-toolbar">
+            <button
+                type="button"
+                class="btn btn-secondary mod-micp-activity__button"
+                data-action="toggle-maximized"
+                data-label-maximize="{{maximizeiframelabel}}"
+                data-label-restore="{{restoreinlinelabel}}"
+                aria-controls="{{iframeid}}"
+                aria-pressed="false"
+            >{{maximizeiframelabel}}</button>
+        </div>
+        <div class="mod-micp-activity__frame-shell" data-region="mod-micp-frame-shell">
+            <div class="mod-micp-activity__frame" data-region="mod-micp-iframe-container">
+                <iframe
+                    id="{{iframeid}}"
+                    class="mod-micp-activity__iframe"
+                    src="{{iframesrc}}"
+                    title="{{iframetitle}}"
+                    loading="eager"
+                    referrerpolicy="same-origin"
+                    allowfullscreen="allowfullscreen"
+                    data-region="mod-micp-iframe"
+                    data-launch-path="{{launchpath}}"
+                ></iframe>
+            </div>
+        </div>
     </div>
 </section>

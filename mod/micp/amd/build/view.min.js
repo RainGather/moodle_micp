@@ -11,9 +11,16 @@ define(['core/ajax'], function(Ajax) {
     };
     var OBJECT_PROTOTYPE = Object.prototype;
     var state = {
+        activity: null,
         iframe: null,
         iframeOrigin: null,
-        listenerAttached: false
+        maximizeButton: null,
+        listenerAttached: false,
+        uiAttached: false,
+        iframeLoadAttached: false,
+        isIframeFullscreen: false,
+        lastMeasuredHeight: 0,
+        iframeResizeObserver: null
     };
 
     function isPlainObject(value) {
@@ -89,6 +96,219 @@ define(['core/ajax'], function(Ajax) {
         }
     }
 
+    function toggleClass(node, className, shouldEnable) {
+        if (!node) {
+            return;
+        }
+
+        if (shouldEnable) {
+            node.classList.add(className);
+        } else {
+            node.classList.remove(className);
+        }
+    }
+
+    function getViewportHeight() {
+        return Math.max(window.innerHeight || 0, document.documentElement ? document.documentElement.clientHeight : 0);
+    }
+
+    function getIframeMinHeight() {
+        if (state.isIframeFullscreen) {
+            return Math.max(720, getViewportHeight() - 112);
+        }
+
+        return 640;
+    }
+
+    function updateMaximizeButton() {
+        var label;
+
+        if (!state.maximizeButton) {
+            return;
+        }
+
+        label = state.isIframeFullscreen ?
+            state.maximizeButton.getAttribute('data-label-restore') :
+            state.maximizeButton.getAttribute('data-label-maximize');
+
+        state.maximizeButton.textContent = label || '';
+        state.maximizeButton.setAttribute('aria-pressed', state.isIframeFullscreen ? 'true' : 'false');
+    }
+
+    function getRestoreLabel() {
+        if (!state.maximizeButton) {
+            return '退出全屏';
+        }
+
+        return state.maximizeButton.getAttribute('data-label-restore') || '退出全屏';
+    }
+
+    function getIframeDocument() {
+        if (!state.iframe || !state.iframe.contentWindow) {
+            return null;
+        }
+
+        try {
+            return state.iframe.contentDocument || state.iframe.contentWindow.document || null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function measureIframeDocumentHeight() {
+        var iframeDocument = getIframeDocument();
+        var body;
+        var doc;
+
+        if (!iframeDocument) {
+            return 0;
+        }
+
+        body = iframeDocument.body;
+        doc = iframeDocument.documentElement;
+
+        return Math.max(
+            body ? body.scrollHeight : 0,
+            body ? body.offsetHeight : 0,
+            body ? body.clientHeight : 0,
+            doc ? doc.scrollHeight : 0,
+            doc ? doc.offsetHeight : 0,
+            doc ? doc.clientHeight : 0
+        );
+    }
+
+    function ensureIframeDocumentStyle() {
+        var iframeDocument = getIframeDocument();
+        var styleNode;
+
+        if (!iframeDocument || !iframeDocument.head) {
+            return;
+        }
+
+        styleNode = iframeDocument.getElementById('mod-micp-host-style');
+
+        if (!styleNode) {
+            styleNode = iframeDocument.createElement('style');
+            styleNode.id = 'mod-micp-host-style';
+            iframeDocument.head.appendChild(styleNode);
+        }
+
+        styleNode.textContent = [
+            'html, body {',
+            '  overflow-x: hidden !important;',
+            '  overflow-y: visible !important;',
+            '  max-width: 100% !important;',
+            '}',
+            '#mod-micp-exit-fullscreen {',
+            '  position: fixed;',
+            '  top: 16px;',
+            '  right: 16px;',
+            '  z-index: 2147483647;',
+            '  display: inline-flex;',
+            '  align-items: center;',
+            '  justify-content: center;',
+            '  padding: 10px 14px;',
+            '  border: 0;',
+            '  border-radius: 999px;',
+            '  background: rgba(15, 23, 42, 0.88);',
+            '  color: #ffffff;',
+            '  font: 600 14px/1.2 sans-serif;',
+            '  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);',
+            '  cursor: pointer;',
+            '}',
+            '#mod-micp-exit-fullscreen[hidden] {',
+            '  display: none !important;',
+            '}'
+        ].join('\n');
+    }
+
+    function ensureIframeExitButton() {
+        var iframeDocument = getIframeDocument();
+        var button;
+
+        if (!iframeDocument || !iframeDocument.body) {
+            return;
+        }
+
+        button = iframeDocument.getElementById('mod-micp-exit-fullscreen');
+
+        if (!button) {
+            button = iframeDocument.createElement('button');
+            button.id = 'mod-micp-exit-fullscreen';
+            button.type = 'button';
+            button.textContent = getRestoreLabel();
+            button.setAttribute('hidden', 'hidden');
+            button.addEventListener('click', function() {
+                if (document.fullscreenElement === state.iframe && typeof document.exitFullscreen === 'function') {
+                    document.exitFullscreen();
+                }
+            }, false);
+            iframeDocument.body.appendChild(button);
+        }
+
+        button.textContent = getRestoreLabel();
+
+        if (state.isIframeFullscreen) {
+            button.removeAttribute('hidden');
+        } else {
+            button.setAttribute('hidden', 'hidden');
+        }
+    }
+
+    function disconnectIframeObservers() {
+        if (!state.iframeResizeObserver) {
+            return;
+        }
+
+        state.iframeResizeObserver.disconnect();
+        state.iframeResizeObserver = null;
+    }
+
+    function observeIframeDocument() {
+        var iframeDocument = getIframeDocument();
+
+        disconnectIframeObservers();
+
+        if (!iframeDocument || typeof ResizeObserver === 'undefined') {
+            return;
+        }
+
+        state.iframeResizeObserver = new ResizeObserver(function() {
+            applyIframeHeight(measureIframeDocumentHeight());
+        });
+
+        if (iframeDocument.documentElement) {
+            state.iframeResizeObserver.observe(iframeDocument.documentElement);
+        }
+
+        if (iframeDocument.body) {
+            state.iframeResizeObserver.observe(iframeDocument.body);
+        }
+    }
+
+    function syncIframeHeight() {
+        var resolvedHeight;
+        var measuredHeight = measureIframeDocumentHeight();
+
+        if (!state.iframe) {
+            return;
+        }
+
+        if (measuredHeight > 0) {
+            state.lastMeasuredHeight = Math.max(state.lastMeasuredHeight, measuredHeight);
+        }
+
+        resolvedHeight = Math.max(getIframeMinHeight(), state.lastMeasuredHeight || 0, measuredHeight);
+        state.iframe.style.minHeight = getIframeMinHeight() + 'px';
+        state.iframe.style.height = resolvedHeight + 'px';
+    }
+
+    function syncLayoutState() {
+        updateMaximizeButton();
+        ensureIframeExitButton();
+        syncIframeHeight();
+    }
+
     function updateResultSummary(summary) {
         var activity;
         var container;
@@ -100,7 +320,7 @@ define(['core/ajax'], function(Ajax) {
             return;
         }
 
-        activity = document.querySelector('[data-region="mod-micp-activity"]');
+        activity = state.activity || document.querySelector('[data-region="mod-micp-activity"]');
 
         if (!activity) {
             return;
@@ -144,12 +364,67 @@ define(['core/ajax'], function(Ajax) {
 
     function applyIframeHeight(height) {
         var resolvedHeight = Number(height) || 0;
+        var measuredHeight = measureIframeDocumentHeight();
 
-        if (!state.iframe || resolvedHeight <= 0) {
+        if (resolvedHeight > 0) {
+            state.lastMeasuredHeight = resolvedHeight;
+        }
+
+        if (measuredHeight > 0) {
+            state.lastMeasuredHeight = Math.max(state.lastMeasuredHeight, measuredHeight);
+        }
+
+        if (!state.iframe) {
             return;
         }
 
-        state.iframe.style.height = Math.max(480, resolvedHeight) + 'px';
+        syncIframeHeight();
+    }
+
+    function handleMaximizeClick(event) {
+        var fullscreenRequest;
+
+        event.preventDefault();
+
+        if (!state.iframe) {
+            return;
+        }
+
+        if (document.fullscreenElement === state.iframe) {
+            if (typeof document.exitFullscreen === 'function') {
+                document.exitFullscreen();
+            }
+            return;
+        }
+
+        if (typeof state.iframe.requestFullscreen === 'function') {
+            fullscreenRequest = state.iframe.requestFullscreen();
+            if (fullscreenRequest && typeof fullscreenRequest.catch === 'function') {
+                fullscreenRequest.catch(function() {
+                    return null;
+                });
+            }
+        }
+    }
+
+    function handleFullscreenChange() {
+        state.isIframeFullscreen = document.fullscreenElement === state.iframe;
+        syncLayoutState();
+    }
+
+    function attachIframeLoadHandler() {
+        if (!state.iframe || state.iframeLoadAttached) {
+            return;
+        }
+
+        state.iframe.addEventListener('load', function() {
+            ensureIframeDocumentStyle();
+            ensureIframeExitButton();
+            observeIframeDocument();
+            state.lastMeasuredHeight = 0;
+            applyIframeHeight(measureIframeDocumentHeight());
+        }, false);
+        state.iframeLoadAttached = true;
     }
 
     function handleEvent(payload) {
@@ -270,18 +545,41 @@ define(['core/ajax'], function(Ajax) {
         state.listenerAttached = true;
     }
 
+    function ensureUi() {
+        if (state.uiAttached) {
+            return;
+        }
+
+        if (state.maximizeButton) {
+            state.maximizeButton.addEventListener('click', handleMaximizeClick, false);
+        }
+
+        window.addEventListener('resize', syncIframeHeight, false);
+        document.addEventListener('fullscreenchange', handleFullscreenChange, false);
+        state.uiAttached = true;
+    }
+
     return {
         init: function(args) {
             var config = isPlainObject(args) ? args : {};
 
+            state.activity = document.querySelector(config.activitySelector || '[data-region="mod-micp-activity"]');
             state.iframe = document.getElementById(config.iframeId || '');
+            state.maximizeButton = state.activity ? state.activity.querySelector('[data-action="toggle-maximized"]') : null;
 
-            if (!state.iframe) {
+            if (!state.activity || !state.iframe) {
                 return false;
             }
 
             state.iframeOrigin = resolveOrigin(config.iframeSrc || state.iframe.getAttribute('src') || '');
             ensureListener();
+            attachIframeLoadHandler();
+            ensureUi();
+            ensureIframeDocumentStyle();
+            ensureIframeExitButton();
+            observeIframeDocument();
+            applyIframeHeight(measureIframeDocumentHeight());
+            syncLayoutState();
 
             return true;
         }

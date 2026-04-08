@@ -56,6 +56,7 @@ $canviewreports = has_capability('mod/micp:viewreports', $context);
 $PAGE->set_url('/mod/micp/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($micp->name));
 $PAGE->set_heading(format_string($course->fullname));
+$PAGE->requires->css(new moodle_url('/mod/micp/styles.css'));
 
 $PAGE->requires->js_init_code('window.MICP_CONTEXT = ' . json_encode(
     $micpcontext,
@@ -71,6 +72,8 @@ $rendererdata = [
     'iframesrc' => $iframeurl,
     'iframeid' => $iframeid,
     'iframetitle' => $iframetitle,
+    'maximizeiframelabel' => get_string('maximizeiframe', 'mod_micp'),
+    'restoreinlinelabel' => get_string('restoreinline', 'mod_micp'),
     'resultsummary' => $resultsummary,
     'canviewreports' => $canviewreports,
     'reporturl' => (new moodle_url('/mod/micp/report.php', ['id' => $cm->id]))->out(false),
