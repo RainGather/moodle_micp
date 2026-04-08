@@ -1,22 +1,22 @@
 <section class="mod-micp-activity" data-region="mod-micp-activity">
     <h2>{{name}}</h2>
     {{{intro}}}
-    <div class="mod-micp-activity__summary" data-region="mod-micp-result-summary" style="margin: 1rem 0; padding: 1rem; border: 1px solid #d8dee9; border-radius: 0.75rem; background: #f8fafc;">
-        <h3 style="margin-top: 0;">Your activity result</h3>
-        <p style="margin-bottom: 0.5rem;"><strong>Status:</strong> <span data-field="status">{{resultsummary.statuslabel}}</span></p>
-        <p style="margin-bottom: 0.5rem;"><strong>Activity score:</strong> <span data-field="score">{{resultsummary.scorelabel}}</span>%</p>
-        <p style="margin-bottom: 0.5rem;"><strong>Grade:</strong> <span data-field="rawgrade">{{resultsummary.rawgradelabel}}</span> / <span data-field="grademax">{{resultsummary.grademaxlabel}}</span></p>
-        <p style="margin-bottom: 0.5rem;"><strong>Interaction state:</strong> <span data-field="interactions">{{resultsummary.interactionslabel}}</span></p>
+    <div class="mod-micp-activity__summary" data-region="mod-micp-result-summary">
+        <h3 class="mod-micp-activity__summary-title">{{resultsummarytitle}}</h3>
+        <p class="mod-micp-activity__summary-row"><strong>{{submissionstatuslabel}}:</strong> <span data-field="status">{{resultsummary.statuslabel}}</span></p>
+        <p class="mod-micp-activity__summary-row"><strong>{{activityscorelabel}}:</strong> <span data-field="score">{{resultsummary.scorelabel}}</span>%</p>
+        <p class="mod-micp-activity__summary-row"><strong>{{gradelabel}}:</strong> <span data-field="rawgrade">{{resultsummary.rawgradelabel}}</span> / <span data-field="grademax">{{resultsummary.grademaxlabel}}</span></p>
+        <p class="mod-micp-activity__summary-row"><strong>{{interactionstatelabel}}:</strong> <span data-field="interactions">{{resultsummary.interactionslabel}}</span></p>
         {{#resultsummary.showsubmittedat}}
-            <p data-region="mod-micp-submitted-at" style="margin-bottom: 0;"><strong>Last submitted:</strong> <span data-field="submittedat">{{resultsummary.submittedatlabel}}</span></p>
+            <p class="mod-micp-activity__summary-row mod-micp-activity__summary-row--last" data-region="mod-micp-submitted-at"><strong>{{lastsubmissionlabel}}:</strong> <span data-field="submittedat">{{resultsummary.submittedatlabel}}</span></p>
         {{/resultsummary.showsubmittedat}}
         {{^resultsummary.showsubmittedat}}
-            <p data-region="mod-micp-submitted-at" style="margin-bottom: 0; display: none;"><strong>Last submitted:</strong> <span data-field="submittedat"></span></p>
+            <p class="mod-micp-activity__summary-row mod-micp-activity__summary-row--last mod-micp-activity__region--hidden" data-region="mod-micp-submitted-at"><strong>{{lastsubmissionlabel}}:</strong> <span data-field="submittedat"></span></p>
         {{/resultsummary.showsubmittedat}}
         {{#resultsummary.showdetails}}
-            <div data-region="mod-micp-result-details" style="margin-top: 1rem;">
-                <strong>Interaction breakdown:</strong>
-                <ul data-region="mod-micp-result-details-list" style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
+            <div class="mod-micp-activity__details" data-region="mod-micp-result-details">
+                <strong>{{interactionbreakdownlabel}}:</strong>
+                <ul class="mod-micp-activity__details-list" data-region="mod-micp-result-details-list">
                     {{#resultsummary.details}}
                         <li>{{label}} — {{scorelabel}}</li>
                     {{/resultsummary.details}}
@@ -24,13 +24,13 @@
             </div>
         {{/resultsummary.showdetails}}
         {{^resultsummary.showdetails}}
-            <div data-region="mod-micp-result-details" style="margin-top: 1rem; display: none;">
-                <strong>Interaction breakdown:</strong>
-                <ul data-region="mod-micp-result-details-list" style="margin: 0.5rem 0 0 1.25rem; padding: 0;"></ul>
+            <div class="mod-micp-activity__details mod-micp-activity__region--hidden" data-region="mod-micp-result-details">
+                <strong>{{interactionbreakdownlabel}}:</strong>
+                <ul class="mod-micp-activity__details-list" data-region="mod-micp-result-details-list"></ul>
             </div>
         {{/resultsummary.showdetails}}
         {{#canviewreports}}
-            <p style="margin: 1rem 0 0;"><a href="{{reporturl}}">View results</a></p>
+            <p class="mod-micp-activity__summary-link"><a href="{{reporturl}}">{{viewresultslabel}}</a></p>
         {{/canviewreports}}
     </div>
     <div class="mod-micp-activity__display">

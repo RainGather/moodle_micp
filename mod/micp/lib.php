@@ -267,9 +267,12 @@ function micp_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
 
 function micp_supports(string $feature) {
     switch ($feature) {
+        case FEATURE_GROUPS:
+        case FEATURE_GROUPINGS:
         case FEATURE_MOD_INTRO:
         case FEATURE_SHOW_DESCRIPTION:
         case FEATURE_GRADE_HAS_GRADE:
+        case FEATURE_BACKUP_MOODLE2:
             return true;
         case FEATURE_MOD_PURPOSE:
             return MOD_PURPOSE_INTERACTIVECONTENT;
@@ -422,6 +425,7 @@ function micp_get_user_result_summary(stdClass $micp, int $userid): array {
     global $DB;
 
     $submission = micp_get_submission_record($micp, $userid);
+    $interactionfallback = get_string('interactionfallbacklabel', 'mod_micp');
 
     $hasinteraction = $DB->record_exists('micp_events', [
         'micpid' => $micp->id,
@@ -483,7 +487,7 @@ function micp_get_user_result_summary(stdClass $micp, int $userid): array {
 
             return [
                 'interactionid' => (string)($detail['interactionid'] ?? ''),
-                'label' => (string)($detail['label'] ?? $detail['interactionid'] ?? 'Interaction'),
+                'label' => (string)($detail['label'] ?? $detail['interactionid'] ?? $interactionfallback),
                 'scorelabel' => $scorelabel,
                 'complete' => !empty($detail['complete']),
             ];
@@ -542,7 +546,7 @@ function micp_get_participant_report_rows(stdClass $micp, $cm, context_module $c
             'finalgrade' => $finalgrade,
             'interactiondetails' => array_values($summary['details'] ?? []),
             'interactionbreakdown' => implode(', ', array_map(static function(array $detail): string {
-                return ($detail['label'] ?? 'Interaction') . ': ' . ($detail['scorelabel'] ?? '0 / 0');
+                return ($detail['label'] ?? get_string('interactionfallbacklabel', 'mod_micp')) . ': ' . ($detail['scorelabel'] ?? '0 / 0');
             }, $summary['details'] ?? [])),
             'reviewaction' => $summary['submitted'] && ($summary['reviewstatus'] ?? '') !== 'not_required'
                 ? html_writer::link($reviewurl, get_string('reviewsubmission', 'mod_micp'))

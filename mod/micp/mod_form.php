@@ -59,22 +59,22 @@ class mod_micp_mod_form extends moodleform_mod {
         }
 
         if (str_starts_with($launchpath, 'http://') || str_starts_with($launchpath, 'https://')) {
-            $errors['launchpath'] = 'Launch path must be a plugin-local relative HTML file.';
+            $errors['launchpath'] = get_string('launchpathinvalidurl', 'mod_micp');
             return $errors;
         }
 
         if (str_starts_with($launchpath, '/')) {
-            $errors['launchpath'] = 'Launch path must not start with /.';
+            $errors['launchpath'] = get_string('launchpathinvalidabsolute', 'mod_micp');
             return $errors;
         }
 
         if (strpos($launchpath, '..') !== false) {
-            $errors['launchpath'] = 'Launch path must not contain path traversal segments.';
+            $errors['launchpath'] = get_string('launchpathinvalidtraversal', 'mod_micp');
             return $errors;
         }
 
         if (!preg_match('/\.html\z/i', $launchpath)) {
-            $errors['launchpath'] = 'Launch path must end in .html.';
+            $errors['launchpath'] = get_string('launchpathinvalidextension', 'mod_micp');
         }
 
         return $errors;

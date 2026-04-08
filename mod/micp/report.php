@@ -64,7 +64,7 @@ $table->head = [
 $table->head = array_merge(
     array_slice($table->head, 0, 5),
     array_map(static function(array $column): string {
-        return s($column['label'] ?? $column['interactionid'] ?? 'Interaction');
+        return s($column['label'] ?? $column['interactionid'] ?? get_string('interactionfallbacklabel', 'mod_micp'));
     }, $interactioncolumns),
     array_slice($table->head, 5)
 );

@@ -1,8 +1,45 @@
-.mod-micp-activity__display {
+.path-mod-micp .mod-micp-activity__summary {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid #d8dee9;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+}
+
+.path-mod-micp .mod-micp-activity__summary-title {
+    margin-top: 0;
+}
+
+.path-mod-micp .mod-micp-activity__summary-row {
+    margin-bottom: 0.5rem;
+}
+
+.path-mod-micp .mod-micp-activity__summary-row--last {
+    margin-bottom: 0;
+}
+
+.path-mod-micp .mod-micp-activity__details {
     margin-top: 1rem;
 }
 
-.mod-micp-activity__toolbar {
+.path-mod-micp .mod-micp-activity__details-list {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+}
+
+.path-mod-micp .mod-micp-activity__summary-link {
+    margin: 1rem 0 0;
+}
+
+.path-mod-micp .mod-micp-activity__region--hidden {
+    display: none;
+}
+
+.path-mod-micp .mod-micp-activity__display {
+    margin-top: 1rem;
+}
+
+.path-mod-micp .mod-micp-activity__toolbar {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -10,11 +47,11 @@
     margin-bottom: 0.75rem;
 }
 
-.mod-micp-activity__button {
+.path-mod-micp .mod-micp-activity__button {
     white-space: nowrap;
 }
 
-.mod-micp-activity__frame-shell {
+.path-mod-micp .mod-micp-activity__frame-shell {
     position: relative;
     width: 100%;
     overflow: visible;
@@ -24,14 +61,14 @@
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
-.mod-micp-activity__frame {
+.path-mod-micp .mod-micp-activity__frame {
     width: 100%;
     overflow: hidden;
     background: #ffffff;
     border-radius: inherit;
 }
 
-.mod-micp-activity__iframe {
+.path-mod-micp .mod-micp-activity__iframe {
     display: block;
     width: 100%;
     min-height: 640px;
@@ -40,15 +77,15 @@
 }
 
 @media (max-width: 767px) {
-    .mod-micp-activity__toolbar {
+    .path-mod-micp .mod-micp-activity__toolbar {
         justify-content: stretch;
     }
 
-    .mod-micp-activity__button {
+    .path-mod-micp .mod-micp-activity__button {
         flex: 1 1 12rem;
     }
 
-    .mod-micp-activity__iframe {
+    .path-mod-micp .mod-micp-activity__iframe {
         min-height: 520px;
     }
 }

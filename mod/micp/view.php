@@ -43,6 +43,11 @@ $amdarguments = [
     'iframeId' => $iframeid,
     'iframeSrc' => '',
     'launchPath' => '',
+    'strings' => [
+        'submiterror' => get_string('submiterror', 'mod_micp'),
+        'restoreinline' => get_string('restoreinline', 'mod_micp'),
+        'interactionfallbacklabel' => get_string('interactionfallbacklabel', 'mod_micp'),
+    ],
 ];
 
 $resultsummary = micp_get_user_result_summary($micp, (int)$USER->id);
@@ -56,7 +61,6 @@ $canviewreports = has_capability('mod/micp:viewreports', $context);
 $PAGE->set_url('/mod/micp/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($micp->name));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->requires->css(new moodle_url('/mod/micp/styles.css'));
 
 $PAGE->requires->js_init_code('window.MICP_CONTEXT = ' . json_encode(
     $micpcontext,
@@ -74,6 +78,14 @@ $rendererdata = [
     'iframetitle' => $iframetitle,
     'maximizeiframelabel' => get_string('maximizeiframe', 'mod_micp'),
     'restoreinlinelabel' => get_string('restoreinline', 'mod_micp'),
+    'resultsummarytitle' => get_string('resultsummarytitle', 'mod_micp'),
+    'submissionstatuslabel' => get_string('submissionstatus', 'mod_micp'),
+    'activityscorelabel' => get_string('activityscore', 'mod_micp'),
+    'gradelabel' => get_string('grade', 'mod_micp'),
+    'interactionstatelabel' => get_string('interactionstate', 'mod_micp'),
+    'lastsubmissionlabel' => get_string('lastsubmission', 'mod_micp'),
+    'interactionbreakdownlabel' => get_string('interactionbreakdown', 'mod_micp'),
+    'viewresultslabel' => get_string('viewresults', 'mod_micp'),
     'resultsummary' => $resultsummary,
     'canviewreports' => $canviewreports,
     'reporturl' => (new moodle_url('/mod/micp/report.php', ['id' => $cm->id]))->out(false),

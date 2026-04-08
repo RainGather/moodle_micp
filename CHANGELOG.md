@@ -5,12 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.2-alpha] — 2026-04-08
+## [0.1.4-alpha] — 2026-04-08
+
+### Added
+- Added Moodle backup and restore support for activity settings, uploaded lesson packages, learner events, and submission snapshots
+- Added a privacy provider covering stored interaction and submission data
 
 ### Changed
-- Reworked the activity host frame so embedded lessons open in a taller, less cramped viewport by default
-- Added learner-facing expand/collapse and fullscreen controls on the activity page
-- Updated the host-side AMD controller to keep iframe height aligned with viewport state changes
+- Restored English labels in the `lang/en` pack for fullscreen controls
+- Moved launch-path validation messages into language strings for plugin-localisation compliance
+- Declared groups, groupings, and Moodle backup support explicitly via `micp_supports()`
+- Extended privacy export/delete coverage to include teachers recorded as manual reviewers
+- Removed redundant manual loading of plugin `styles.css` and relied on Moodle's standard plugin stylesheet pipeline
 
 ## [0.1.3-alpha] — 2026-04-08
 
@@ -18,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced host-container fullscreen controls with direct iframe fullscreen entry and exit handling
 - Switched normal inline rendering back to page-level scrolling instead of nested host scroll areas
 - Added same-origin iframe height measurement, root overflow normalization, and an injected exit control inside fullscreen iframe content
+
+## [0.1.2-alpha] — 2026-04-08
+
+### Changed
+- Reworked the activity host frame so embedded lessons open in a taller, less cramped viewport by default
+- Added learner-facing expand/collapse and fullscreen controls on the activity page
+- Updated the host-side AMD controller to keep iframe height aligned with viewport state changes
 
 ## [0.1.1-alpha] — 2026-03-30
 

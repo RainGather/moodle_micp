@@ -15,6 +15,7 @@ define(['core/ajax'], function(Ajax) {
         iframe: null,
         iframeOrigin: null,
         maximizeButton: null,
+        strings: {},
         listenerAttached: false,
         uiAttached: false,
         iframeLoadAttached: false,
@@ -79,7 +80,7 @@ define(['core/ajax'], function(Ajax) {
             return error.error;
         }
 
-        return 'Submission failed. Please try again.';
+        return state.strings.submiterror || '';
     }
 
     function setText(container, selector, value) {
@@ -137,10 +138,10 @@ define(['core/ajax'], function(Ajax) {
 
     function getRestoreLabel() {
         if (!state.maximizeButton) {
-            return '退出全屏';
+            return state.strings.restoreinline || '';
         }
 
-        return state.maximizeButton.getAttribute('data-label-restore') || '退出全屏';
+        return state.maximizeButton.getAttribute('data-label-restore') || state.strings.restoreinline || '';
     }
 
     function getIframeDocument() {
@@ -341,7 +342,7 @@ define(['core/ajax'], function(Ajax) {
 
         submittedAt = container.querySelector('[data-region="mod-micp-submitted-at"]');
         if (submittedAt) {
-            submittedAt.style.display = summary.showsubmittedat ? '' : 'none';
+            toggleClass(submittedAt, 'mod-micp-activity__region--hidden', !summary.showsubmittedat);
         }
 
         detailsRegion = container.querySelector('[data-region="mod-micp-result-details"]');
@@ -352,12 +353,12 @@ define(['core/ajax'], function(Ajax) {
             if (summary.showdetails && Array.isArray(summary.details) && summary.details.length) {
                 summary.details.forEach(function(detail) {
                     var item = document.createElement('li');
-                    item.textContent = String(detail.label || 'Interaction') + ' — ' + String(detail.scorelabel || '');
+                    item.textContent = String(detail.label || state.strings.interactionfallbacklabel || '') + ' — ' + String(detail.scorelabel || '');
                     detailsList.appendChild(item);
                 });
-                detailsRegion.style.display = '';
+                toggleClass(detailsRegion, 'mod-micp-activity__region--hidden', false);
             } else {
-                detailsRegion.style.display = 'none';
+                toggleClass(detailsRegion, 'mod-micp-activity__region--hidden', true);
             }
         }
     }
@@ -565,6 +566,7 @@ define(['core/ajax'], function(Ajax) {
 
             state.activity = document.querySelector(config.activitySelector || '[data-region="mod-micp-activity"]');
             state.iframe = document.getElementById(config.iframeId || '');
+            state.strings = isPlainObject(config.strings) ? cloneValue(config.strings) : {};
             state.maximizeButton = state.activity ? state.activity.querySelector('[data-action="toggle-maximized"]') : null;
 
             if (!state.activity || !state.iframe) {
