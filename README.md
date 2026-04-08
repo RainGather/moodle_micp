@@ -35,6 +35,7 @@ Visit **Site Administration → Notifications**. Requires **Moodle 5.x**, PHP 8.
 ### 2. Generate your lesson with the bundled Skill
 
 This repo ships with **`micp-html-authoring`** — an AI agent Skill that knows how to build mod_micp lesson packages.
+The bundled Skill now lives at repo-root [`skill/SKILL.md`](skill/SKILL.md).
 
 **OpenCode agent trigger:**
 ```
@@ -52,7 +53,7 @@ The bundled Skill now also supports:
 - **neutral learner feedback by default** — no immediate right/wrong hints unless explicitly requested
 - **manual-review items** via `gradingmode: "manual"` for subjective responses
 
-Full Skill documentation: [`.skills/micp-html-authoring/SKILL.md`](.skills/micp-html-authoring/SKILL.md)
+Full Skill documentation: [`skill/SKILL.md`](skill/SKILL.md)
 
 ---
 
@@ -200,19 +201,36 @@ The activity report includes:
 | `mod/micp:submit` | student | Submit and receive grade |
 | `mod/micp:viewreports` | teacher | View grade report |
 
-### Architecture
+### Repository Layout
+
+```
+.
+├── mod/micp/              # Moodle activity plugin
+├── skill/                 # Bundled micp-html-authoring Skill
+│   ├── SKILL.md
+│   └── references/        # Templates, patterns, and bundled runtime
+├── sample/                # Example/generated lesson workspace
+├── README.md
+└── README_zh.md
+```
+
+### Plugin Architecture
 
 ```
 mod/micp/
 ├── lib.php                 # Scoring engine, gradebook wrapper
 ├── view.php                # Activity page (iframe host)
+├── styles.css              # Activity host styling
+├── templates/activity.mustache  # Activity host template
 ├── file.php                # Pluginfile handler for lesson assets
 ├── report.php              # Participant grade report
+├── review.php              # Manual review workflow
 ├── micp.js                 # Client SDK
 ├── db/install.xml          # Tables: micp_events, micp_submissions
 ├── db/services.php         # Moodle AJAX endpoints
+├── classes/external/       # AJAX entrypoints
 ├── classes/local/
-│   └── scoring_service.php  # Server-side grading logic
+│   └── ...                 # Scoring, repository, and submission services
 └── lang/en/micp.php
 ```
 

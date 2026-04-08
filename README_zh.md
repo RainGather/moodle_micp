@@ -35,6 +35,7 @@ cp -r mod/micp /path/to/your/moodle/mod/
 ### 第二步：用 AI Skill 生成你自己的课件
 
 本仓库附带了 **`micp-html-authoring`** — 一个 AI Agent Skill，知道如何构建 mod_micp 课件包。
+当前内置 Skill 位于仓库根目录的 [`skill/SKILL.md`](skill/SKILL.md)。
 
 **OpenCode Agent 触发词：**
 ```
@@ -52,7 +53,7 @@ ZIP 打包 → 上传到 mod_micp → 学生获得一套自动评分的互动课
 - **默认中性反馈** —— 除非明确要求，否则不会立刻告诉学生对错
 - **主观题人工批改** —— 通过 `gradingmode: "manual"` 标记需要教师复核的题目
 
-详细文档：[`.skills/micp-html-authoring/SKILL.md`](.skills/micp-html-authoring/SKILL.md)
+详细文档：[`skill/SKILL.md`](skill/SKILL.md)
 
 ---
 
@@ -200,19 +201,36 @@ const ctx = MICP.getContext();                         // { cmid, userid, sesske
 | `mod/micp:submit` | 学生 | 提交并获得成绩 |
 | `mod/micp:viewreports` | 教师 | 查看成绩报告 |
 
-### 架构
+### 仓库结构
+
+```
+.
+├── mod/micp/              # Moodle 活动插件本体
+├── skill/                 # 内置的 micp-html-authoring Skill
+│   ├── SKILL.md
+│   └── references/        # 模板、交互模式与运行时资源
+├── sample/                # 示例/生成中的课件工作目录
+├── README.md
+└── README_zh.md
+```
+
+### 插件架构
 
 ```
 mod/micp/
 ├── lib.php                 # 评分引擎、gradebook 封装
 ├── view.php                # 活动页面（iframe 容器）
+├── styles.css              # 活动承载页样式
+├── templates/activity.mustache  # 活动承载页模板
 ├── file.php                # 插件文件访问（课件资源服务）
 ├── report.php              # 参与者成绩报告
+├── review.php              # 人工批改流程
 ├── micp.js                 # 客户端 SDK
 ├── db/install.xml          # 数据表：micp_events, micp_submissions
 ├── db/services.php         # Moodle AJAX 接口
+├── classes/external/       # AJAX 入口
 ├── classes/local/
-│   └── scoring_service.php  # 服务端评分逻辑
+│   └── ...                 # 评分、仓储与提交服务
 └── lang/en/micp.php
 ```
 
