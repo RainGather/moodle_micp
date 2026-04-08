@@ -29,6 +29,22 @@ If the user only asks for one, remind them both are needed and produce both anyw
 
 Visual polish is important, but it is always secondary to the MICP contract. Modern styling must **never** interfere with MICP SDK integration, postMessage flows, step progression, accessibility, response capture, or server-side grading.
 
+## No Meta Language Rule
+
+**Do not put meta statements into learner-facing HTML.** The generated page must speak in the voice of the lesson itself, not in the voice of an author, tool, assistant, or wrapper around the lesson.
+
+Avoid copy such as:
+- "This interactive will teach you..."
+- "In this lesson you will..."
+- "Below is an activity about..."
+- "Click the button below to start this exercise..."
+- Any mention of AI generation, prompts, templates, pages, modules, or the fact that content was created for Moodle
+
+Prefer domain-first, task-first copy:
+- state the concept, problem, scenario, or learner task directly
+- use concise instructional language tied to the subject matter
+- write headings, prompts, helper text, and button labels as if they belong naturally inside the learning experience itself
+
 ## ZIP Packaging Contract
 
 Uploaded MICP packages are served by Moodle using the **full relative launch path**, not by guessing from the filename alone.
