@@ -9,21 +9,25 @@ Thank you for your interest in contributing!
    ```bash
    git clone git@github.com:YOUR_USERNAME/moodle-mod_micp.git
    ```
-3. **Create a feature branch**:
+3. If you are testing inside a full Moodle checkout, place this repository at:
+   ```bash
+   /path/to/your/moodle/mod/micp
+   ```
+4. **Create a feature branch**:
    ```bash
    git checkout -b feature/your-feature-name
    ```
-4. **Make your changes** — follow the Moodle coding style
-5. **Run tests** (if applicable — see Testing section below)
-6. **Commit** with a clear message:
+5. **Make your changes** — follow the Moodle coding style
+6. **Run tests** (if applicable — see Testing section below)
+7. **Commit** with a clear message:
    ```bash
    git commit -m "Add: your feature description"
    ```
-7. **Push** to your fork:
+8. **Push** to your fork:
    ```bash
    git push origin feature/your-feature-name
    ```
-8. Open a **Pull Request** against `master` on the main repository
+9. Open a **Pull Request** against `master` on the main repository
 
 ## Coding Standards
 
@@ -34,7 +38,7 @@ Thank you for your interest in contributing!
 
 ## Testing
 
-Unit tests are in `mod/micp/tests/`. Run with:
+Unit tests are in `tests/`. Run with:
 
 ```bash
 # Inside your Moodle root
@@ -56,7 +60,7 @@ When publishing the plugin publicly, prefer Moodle's repository naming conventio
 ## Security
 
 If you discover a security vulnerability, **do not open a public issue**.
-Use the repository's private security disclosure channel, or the maintainer contact published with the plugin release.
+Use the repository's private security disclosure channel, or follow [SECURITY.md](./SECURITY.md).
 
 ## License
 

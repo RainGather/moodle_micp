@@ -45,10 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `file.php` pluginfile handler for ZIP package extraction
 - `report.php` participant grade report (teacher view)
 - Built-in demo lesson: `sample_content/demo.html`
-- Production-ready sample packages in `generated/`:
-  - `audio-digitization-micp/` (English, 33 nodes)
-  - `audio-digitization-micp-zh/` (Chinese)
-  - `photosynthesis-micp/` (English, progressive disclosure)
 
 ### Security
 - All write ops require `require_login()` + `require_sesskey()`
