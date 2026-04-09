@@ -15,11 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_micp';
-$plugin->version = 2026040802;
+$plugin->version = 2026040900;
 $plugin->requires = 2025041400.00;
-$plugin->supported = [500, 599];
+$plugin->supported = [500, 500];
 $plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.4-alpha';
+$plugin->release = '0.2.0-alpha';

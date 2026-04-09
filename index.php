@@ -15,22 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/lib.php');
-
-$resolvelaunchpath = static function(?string $launchpath): string {
-    $launchpath = trim($launchpath ?? '');
-    if ($launchpath === '' ||
-            str_starts_with($launchpath, 'http://') ||
-            str_starts_with($launchpath, 'https://') ||
-            str_starts_with($launchpath, '/') ||
-            strpos($launchpath, '..') !== false ||
-            !preg_match('/\.html\z/i', $launchpath)) {
-        return micp_default_launch_path();
-    }
-
-    return $launchpath;
-};
 
 $id = required_param('id', PARAM_INT);
 
@@ -62,7 +55,7 @@ $table->head = [
 foreach ($instances as $instance) {
     $link = new moodle_url('/mod/micp/view.php', ['id' => $instance->coursemodule]);
     $name = format_string($instance->name, true, ['context' => context_module::instance($instance->coursemodule)]);
-    $launchpath = $resolvelaunchpath($instance->launchpath ?? '');
+    $launchpath = \mod_micp\local\activity_settings::resolve_launch_path($instance->launchpath ?? '');
 
     $table->data[] = [
         html_writer::link($link, $name),

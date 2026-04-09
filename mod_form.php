@@ -15,15 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
 require_once($CFG->libdir . '/filelib.php');
-require_once(__DIR__ . '/lib.php');
 
 class mod_micp_mod_form extends moodleform_mod {
     public function definition(): void {
         $mform = $this->_form;
+        $launchmanager = new \mod_micp\local\launch_manager();
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
@@ -35,16 +43,18 @@ class mod_micp_mod_form extends moodleform_mod {
 
         $mform->addElement('text', 'launchpath', get_string('launchpath', 'mod_micp'), ['size' => 64]);
         $mform->setType('launchpath', PARAM_PATH);
-        $mform->setDefault('launchpath', micp_default_launch_path());
+        $mform->setDefault('launchpath', \mod_micp\local\activity_settings::default_launch_path());
 
-        $mform->addElement('filemanager', 'launchfile', get_string('launchfile', 'mod_micp'), null, [
-            'subdirs' => 0,
-            'maxfiles' => 1,
-            'accepted_types' => ['.zip', '.html'],
-        ]);
+        $mform->addElement(
+            'filemanager',
+            'launchfile',
+            get_string('launchfile', 'mod_micp'),
+            null,
+            $launchmanager->get_file_manager_options()
+        );
 
         $this->standard_grading_coursemodule_elements();
-        $mform->setDefault('grade', micp_normalize_grade(100));
+        $mform->setDefault('grade', \mod_micp\local\activity_settings::normalize_grade(100));
 
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();

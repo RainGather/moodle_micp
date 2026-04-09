@@ -15,43 +15,33 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * Core callbacks and thin wrappers for mod_micp.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/gradelib.php');
 require_once($CFG->libdir . '/filelib.php');
-require_once($CFG->dirroot . '/mod/micp/classes/local/scoring_service.php');
 
 function micp_default_launch_path(): string {
-    return 'index.html';
+    return \mod_micp\local\activity_settings::default_launch_path();
 }
 
 function micp_resolve_launch_path(?string $launchpath): string {
-    $launchpath = trim($launchpath ?? '');
-
-    if ($launchpath === '' ||
-            str_starts_with($launchpath, 'http://') ||
-            str_starts_with($launchpath, 'https://') ||
-            str_starts_with($launchpath, '/') ||
-            strpos($launchpath, '..') !== false ||
-            !preg_match('/\.html\z/i', $launchpath)) {
-        return micp_default_launch_path();
-    }
-
-    return $launchpath;
+    return \mod_micp\local\activity_settings::resolve_launch_path($launchpath);
 }
 
 function micp_normalize_grade($grade): int {
-    $grade = (int)($grade ?? 0);
-
-    return $grade > 0 ? $grade : 100;
+    return \mod_micp\local\activity_settings::normalize_grade($grade);
 }
 
 function micp_get_launch_file_manager_options(): array {
-    return [
-        'subdirs' => 0,
-        'maxfiles' => 1,
-        'accepted_types' => ['.zip', '.html'],
-    ];
+    return (new \mod_micp\local\launch_manager())->get_file_manager_options();
 }
 
 function micp_is_zip_file(stored_file $file): bool {
@@ -61,145 +51,34 @@ function micp_is_zip_file(stored_file $file): bool {
 }
 
 function micp_extract_launch_package(context_module $context): void {
-    $fs = get_file_storage();
-    $fs->delete_area_files($context->id, 'mod_micp', 'launchpackage', 0);
-
-    $zipfiles = $fs->get_area_files($context->id, 'mod_micp', 'launchpackagezip', 0, 'filename', false);
-    if (!$zipfiles) {
-        return;
-    }
-
-    $zipfile = reset($zipfiles);
-    if (!$zipfile || $zipfile->is_directory()) {
-        return;
-    }
-
-    if (!micp_is_zip_file($zipfile)) {
-        // Non-ZIP HTML file: copy to launchpackage as index.html at filepath='/0/'.
-        // pluginfile.php URL reconstruction for itemid=0 gives filepath='/0/',
-        // so we must store at filepath='/0/' for the lookup to match.
-        $fs->create_file_from_storedfile([
-            'contextid' => $context->id,
-            'component' => 'mod_micp',
-            'filearea' => 'launchpackage',
-            'itemid' => 0,
-            'filepath' => '/0/',
-            'filename' => 'index.html',
-        ], $zipfile);
-
-        return;
-    }
-
-    $packer = get_file_packer('application/zip');
-    $extracted = $zipfile->extract_to_storage($packer, $context->id, 'mod_micp', 'launchpackage', 0, '/');
-    if ($extracted === 0) {
-        debugging("micp: extract_to_storage produced 0 files for ZIP: " . $zipfile->get_filename(), DEBUG_ALL);
-        return;
-    }
-
-    // Fix filepath mismatch: extract_to_storage stores at filepath='/'.
-    // pluginfile.php URL reconstruction for itemid=0 gives filepath='/0/'.
-    // Move root files to filepath='/0/' so the lookup matches.
-    $allfiles = $fs->get_area_files($context->id, 'mod_micp', 'launchpackage', 0, 'filepath, filename', false);
-    foreach ($allfiles as $file) {
-        if ($file->is_directory()) {
-            continue;
-        }
-        if ($file->get_filepath() === '/') {
-            $fs->create_file_from_storedfile([
-                'contextid' => $context->id,
-                'component' => 'mod_micp',
-                'filearea' => 'launchpackage',
-                'itemid' => 0,
-                'filepath' => '/0/',
-                'filename' => $file->get_filename(),
-            ], $file);
-            $file->delete();
-        }
-    }
+    (new \mod_micp\local\launch_manager())->extract_launch_package($context);
 }
 
 function micp_save_launch_file(stdClass $data): void {
-    if (!isset($data->coursemodule)) {
-        return;
-    }
-
-    $context = context_module::instance((int)$data->coursemodule);
-    file_save_draft_area_files(
-        (int)($data->launchfile ?? 0),
-        $context->id,
-        'mod_micp',
-        'launchpackagezip',
-        0,
-        micp_get_launch_file_manager_options()
-    );
-
-    micp_extract_launch_package($context);
+    (new \mod_micp\local\launch_manager())->save_launch_file($data);
 }
 
 function micp_get_uploaded_launch_file(context_module $context): ?stored_file {
-    $fs = get_file_storage();
-    $files = $fs->get_area_files($context->id, 'mod_micp', 'launchpackage', 0, 'filepath, filename', false);
-    $fallback = null;
-
-    foreach ($files as $file) {
-        if ($file->is_directory()) {
-            continue;
-        }
-
-        if ($file->get_filename() === 'index.html') {
-            return $file;
-        }
-
-        if ($fallback === null && preg_match('/\.html\z/i', $file->get_filename())) {
-            $fallback = $file;
-        }
-    }
-
-    return $fallback;
+    return (new \mod_micp\local\launch_manager())->get_uploaded_launch_file($context);
 }
 
 function micp_get_public_launch_path(stored_file $storedfile): string {
-    $filepath = $storedfile->get_filepath();
-    if ($filepath === '/0/') {
-        $filepath = '/';
-    }
-
-    return ltrim($filepath, '/') . $storedfile->get_filename();
+    return (new \mod_micp\local\launch_manager())->get_public_launch_path($storedfile);
 }
 
 function micp_get_launch_url(stdClass $micp, context_module $context): array {
-    $storedfile = micp_get_uploaded_launch_file($context);
-    if ($storedfile) {
-        $launchpath = micp_get_public_launch_path($storedfile);
-        $segments = array_map('rawurlencode', explode('/', $launchpath));
-        $fileurl = $GLOBALS['CFG']->wwwroot . '/mod/micp/file.php/' . $context->instanceid . '/' . implode('/', $segments);
-
-        return [
-            'url' => $fileurl,
-            'path' => $launchpath,
-            'uploaded' => true,
-        ];
-    }
-
-    $launchpath = micp_resolve_launch_path($micp->launchpath ?? '');
-
-    return [
-        'url' => $GLOBALS['CFG']->wwwroot . '/mod/micp/' . $launchpath,
-        'path' => $launchpath,
-        'uploaded' => false,
-    ];
+    return (new \mod_micp\local\launch_manager())->get_launch_url($micp, $context);
 }
 
 function micp_add_instance(stdClass $data, $mform = null): int {
     global $DB;
 
-    $data->launchpath = micp_resolve_launch_path($data->launchpath ?? '');
-    $data->grade = micp_normalize_grade($data->grade ?? null);
+    $data->launchpath = \mod_micp\local\activity_settings::resolve_launch_path($data->launchpath ?? '');
+    $data->grade = \mod_micp\local\activity_settings::normalize_grade($data->grade ?? null);
     $data->timemodified = time();
 
     $data->id = $DB->insert_record('micp', $data);
-    micp_save_launch_file($data);
+    (new \mod_micp\local\launch_manager())->save_launch_file($data);
 
     return $data->id;
 }
@@ -208,12 +87,12 @@ function micp_update_instance(stdClass $data, $mform = null): bool {
     global $DB;
 
     $data->id = $data->instance;
-    $data->launchpath = micp_resolve_launch_path($data->launchpath ?? '');
-    $data->grade = micp_normalize_grade($data->grade ?? null);
+    $data->launchpath = \mod_micp\local\activity_settings::resolve_launch_path($data->launchpath ?? '');
+    $data->grade = \mod_micp\local\activity_settings::normalize_grade($data->grade ?? null);
     $data->timemodified = time();
 
     $updated = $DB->update_record('micp', $data);
-    micp_save_launch_file($data);
+    (new \mod_micp\local\launch_manager())->save_launch_file($data);
 
     return $updated;
 }
@@ -227,13 +106,13 @@ function micp_delete_instance(int $id): bool {
 
     $DB->delete_records('micp_events', ['micpid' => $micp->id]);
     $DB->delete_records('micp_submissions', ['micpid' => $micp->id]);
+
     $cm = get_coursemodule_from_instance('micp', $micp->id, $micp->course, false, IGNORE_MISSING);
     if ($cm) {
         $context = context_module::instance((int)$cm->id);
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_micp', 'launchpackagezip', 0);
-        $fs->delete_area_files($context->id, 'mod_micp', 'launchpackage', 0);
+        (new \mod_micp\local\launch_manager())->delete_activity_files($context);
     }
+
     $DB->delete_records('micp', ['id' => $micp->id]);
 
     return true;
@@ -245,11 +124,7 @@ function micp_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
     }
 
     require_course_login($course, true, $cm);
-    if (!has_capability('mod/micp:view', $context)) {
-        return false;
-    }
-
-    if ($filearea !== 'launchpackage') {
+    if (!has_capability('mod/micp:view', $context) || $filearea !== 'launchpackage') {
         return false;
     }
 
@@ -263,6 +138,8 @@ function micp_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
     }
 
     send_stored_file($file, null, 0, false, $options);
+
+    return true;
 }
 
 function micp_supports(string $feature) {
@@ -282,333 +159,69 @@ function micp_supports(string $feature) {
 }
 
 function micp_evaluate(stdClass $micp, int $userid): array {
-    $cm = get_coursemodule_from_instance('micp', $micp->id, $micp->course, false, MUST_EXIST);
-    $context = context_module::instance((int)$cm->id);
-    $service = new \mod_micp\local\scoring_service();
-
-    return $service->evaluate($micp, $userid, $context);
+    return (new \mod_micp\local\result_service())->evaluate($micp, $userid);
 }
 
 function micp_build_grade_entry(stdClass $micp, int $userid): stdClass {
-    $submission = micp_get_submission_record($micp, $userid);
-    $evaluation = micp_evaluate($micp, $userid);
-    $rawgrade = micp_get_effective_raw_grade($micp, $submission, $evaluation);
-
-    return (object) [
-        'userid' => $userid,
-        'rawgrade' => $rawgrade,
-    ];
+    return (new \mod_micp\local\result_service())->build_grade_entry($micp, $userid);
 }
 
 function micp_get_submission_record(stdClass $micp, int $userid): ?stdClass {
-    global $DB;
-
-    return $DB->get_record('micp_submissions', [
-        'micpid' => $micp->id,
-        'userid' => $userid,
-    ]) ?: null;
+    return (new \mod_micp\local\result_service())->get_submission_record($micp, $userid);
 }
 
 function micp_get_review_data(?stdClass $submission): array {
-    if (!$submission || empty($submission->reviewjson)) {
-        return [];
-    }
-
-    $data = json_decode((string)$submission->reviewjson, true);
-
-    return is_array($data) ? $data : [];
+    return (new \mod_micp\local\result_service())->get_review_data($submission);
 }
 
 function micp_get_effective_score_percent(?stdClass $submission, array $evaluation): ?int {
-    if ($submission && ($submission->reviewstatus ?? '') === 'pending') {
-        return null;
-    }
-
-    if ($submission && ($submission->reviewstatus ?? '') === 'reviewed' && $submission->finalscore !== null) {
-        return (int)$submission->finalscore;
-    }
-
-    return (int)($evaluation['score'] ?? 0);
+    return (new \mod_micp\local\result_service())->get_effective_score_percent($submission, $evaluation);
 }
 
 function micp_get_effective_raw_grade(stdClass $micp, ?stdClass $submission, array $evaluation): ?float {
-    $score = micp_get_effective_score_percent($submission, $evaluation);
-
-    if ($score === null) {
-        return null;
-    }
-
-    return (float)round((micp_normalize_grade($micp->grade ?? null) * $score) / 100, 2);
+    return (new \mod_micp\local\result_service())->get_effective_raw_grade($micp, $submission, $evaluation);
 }
 
 function micp_extract_submission_actions(?stdClass $submission): array {
-    if (!$submission || empty($submission->rawjson)) {
-        return [];
-    }
-
-    $raw = json_decode((string)$submission->rawjson, true);
-    if (!is_array($raw)) {
-        return [];
-    }
-
-    $actions = $raw['raw']['actions'] ?? $raw['actions'] ?? [];
-
-    return is_array($actions) ? $actions : [];
+    return (new \mod_micp\local\result_service())->extract_submission_actions($submission);
 }
 
 function micp_get_latest_submission_actions_by_interactionid(?stdClass $submission): array {
-    $latest = [];
-
-    foreach (micp_extract_submission_actions($submission) as $action) {
-        if (!is_array($action)) {
-            continue;
-        }
-
-        $interactionid = trim((string)($action['interactionid'] ?? ''));
-        if ($interactionid === '') {
-            continue;
-        }
-
-        $latest[$interactionid] = $action;
-    }
-
-    return $latest;
+    return (new \mod_micp\local\result_service())->get_latest_submission_actions_by_interactionid($submission);
 }
 
 function micp_get_graded_userids(int $micpid): array {
-    global $DB;
-
-    $sql = 'SELECT userid
-              FROM {micp_events}
-             WHERE micpid = :eventmicpid
-          GROUP BY userid
-            UNION
-            SELECT userid
-              FROM {micp_submissions}
-             WHERE micpid = :submissionmicpid';
-
-    return array_map('intval', array_keys($DB->get_records_sql($sql, [
-        'eventmicpid' => $micpid,
-        'submissionmicpid' => $micpid,
-    ])));
+    return (new \mod_micp\local\result_service())->get_graded_userids($micpid);
 }
 
 function micp_grade_item_update(stdClass $micp, ?array $grades = null): int {
-    $grademax = micp_normalize_grade($micp->grade ?? null);
-
-    $item = [
-        'itemname' => clean_param($micp->name, PARAM_NOTAGS),
-        'gradetype' => GRADE_TYPE_VALUE,
-        'grademax' => $grademax,
-        'grademin' => 0,
-    ];
-
-    return grade_update('mod/micp', $micp->course, 'mod', 'micp', $micp->id, 0, $grades, $item);
+    return (new \mod_micp\local\result_service())->grade_item_update($micp, $grades);
 }
 
 function micp_update_grades(stdClass $micp, int $userid = 0): int {
-    if (!empty($userid)) {
-        return micp_grade_item_update($micp, [
-            $userid => micp_build_grade_entry($micp, $userid),
-        ]);
-    }
-
-    $grades = [];
-    foreach (micp_get_graded_userids($micp->id) as $gradeduserid) {
-        $grades[$gradeduserid] = micp_build_grade_entry($micp, $gradeduserid);
-    }
-
-    return micp_grade_item_update($micp, $grades ?: null);
+    return (new \mod_micp\local\result_service())->update_grades($micp, $userid);
 }
 
 function micp_get_user_result_summary(stdClass $micp, int $userid): array {
-    global $DB;
-
-    $submission = micp_get_submission_record($micp, $userid);
-    $interactionfallback = get_string('interactionfallbacklabel', 'mod_micp');
-
-    $hasinteraction = $DB->record_exists('micp_events', [
-        'micpid' => $micp->id,
-        'userid' => $userid,
-        'eventtype' => 'interaction',
-    ]);
-
-    $evaluation = micp_evaluate($micp, $userid);
-    $reviewdata = micp_get_review_data($submission);
-    $grademax = micp_normalize_grade($micp->grade ?? null);
-    $submitted = !empty($submission);
-    $effectivescore = micp_get_effective_score_percent($submission, $evaluation);
-    $effectiverawgrade = micp_get_effective_raw_grade($micp, $submission, $evaluation);
-    $reviewstatus = $submission->reviewstatus ?? 'not_required';
-
-    if (!$submitted) {
-        $statuslabel = get_string('notsubmitted', 'mod_micp');
-        $statusclass = 'pending';
-        $reviewstatuslabel = get_string('reviewstatusnotapplicable', 'mod_micp');
-    } else if ($reviewstatus === 'pending') {
-        $statuslabel = get_string('pendingteacherreview', 'mod_micp');
-        $statusclass = 'pending-review';
-        $reviewstatuslabel = get_string('reviewstatuspending', 'mod_micp');
-    } else if ($reviewstatus === 'reviewed') {
-        $statuslabel = get_string('reviewedbyteacher', 'mod_micp');
-        $statusclass = 'reviewed';
-        $reviewstatuslabel = get_string('reviewstatusreviewed', 'mod_micp');
-    } else {
-        $statuslabel = get_string('submitted', 'mod_micp');
-        $statusclass = 'submitted';
-        $reviewstatuslabel = get_string('reviewstatusnotrequired', 'mod_micp');
-    }
-
-    return [
-        'submitted' => $submitted,
-        'statuslabel' => $statuslabel,
-        'statusclass' => $statusclass,
-        'reviewstatus' => $reviewstatus,
-        'reviewstatuslabel' => $reviewstatuslabel,
-        'hasinteraction' => $hasinteraction,
-        'interactionslabel' => $hasinteraction ? get_string('interactionrecorded', 'mod_micp') : get_string('nointeractionrecorded', 'mod_micp'),
-        'scorelabel' => $effectivescore === null ? get_string('pendingreviewshort', 'mod_micp') : (string)$effectivescore,
-        'rawgradelabel' => $effectiverawgrade === null ? get_string('pendingreviewshort', 'mod_micp') : format_float($effectiverawgrade, 2),
-        'grademaxlabel' => (string)$grademax,
-        'showsubmittedat' => $submitted && !empty($submission->timemodified),
-        'submittedatlabel' => $submitted && !empty($submission->timemodified) ? userdate((int)$submission->timemodified) : '',
-        'details' => array_map(static function(array $detail) use ($reviewdata): array {
-            $reviewitem = $reviewdata['items'][$detail['interactionid'] ?? ''] ?? [];
-            $isreviewedmanual = ($detail['gradingmode'] ?? 'auto') === 'manual' && array_key_exists('score', $reviewitem);
-            $scorelabel = format_float((float)($detail['earned'] ?? 0), 2) . ' / ' . format_float((float)($detail['max'] ?? 0), 2);
-
-            if (($detail['gradingmode'] ?? 'auto') === 'manual') {
-                if ($isreviewedmanual) {
-                    $scorelabel = format_float((float)$reviewitem['score'], 2) . ' / ' . format_float((float)($detail['max'] ?? 0), 2);
-                } else if (!empty($detail['manualreviewrequired'])) {
-                    $scorelabel = get_string('pendingreviewdetail', 'mod_micp') . ' / ' . format_float((float)($detail['max'] ?? 0), 2);
-                }
-            }
-
-            return [
-                'interactionid' => (string)($detail['interactionid'] ?? ''),
-                'label' => (string)($detail['label'] ?? $detail['interactionid'] ?? $interactionfallback),
-                'scorelabel' => $scorelabel,
-                'complete' => !empty($detail['complete']),
-            ];
-        }, $evaluation['details'] ?? []),
-        'showdetails' => !empty($evaluation['details']),
-    ];
+    return (new \mod_micp\local\result_service())->get_user_result_summary($micp, $userid);
 }
 
 function micp_get_user_grade_record(stdClass $micp, int $userid): ?stdClass {
-    global $DB;
-
-    $gradeitem = $DB->get_record('grade_items', [
-        'itemmodule' => 'micp',
-        'iteminstance' => $micp->id,
-        'itemnumber' => 0,
-    ]);
-
-    if (!$gradeitem) {
-        return null;
-    }
-
-    return $DB->get_record('grade_grades', [
-        'itemid' => $gradeitem->id,
-        'userid' => $userid,
-    ]) ?: null;
+    return (new \mod_micp\local\result_service())->get_user_grade_record($micp, $userid);
 }
 
 function micp_get_participant_report_rows(stdClass $micp, $cm, context_module $context, int $groupid = 0): array {
-    $users = get_enrolled_users(
-        $context,
-        '',
-        $groupid,
-        'u.id,u.firstname,u.lastname,u.username,u.email',
-        'u.lastname ASC, u.firstname ASC'
-    );
-
-    $rows = [];
-    foreach ($users as $user) {
-        if (has_capability('mod/micp:addinstance', $context, $user) || has_capability('mod/micp:viewreports', $context, $user)) {
-            continue;
-        }
-
-        $summary = micp_get_user_result_summary($micp, (int)$user->id);
-        $grade = micp_get_user_grade_record($micp, (int)$user->id);
-        $rawgrade = $grade && $grade->rawgrade !== null ? format_float((float)$grade->rawgrade, 2) : get_string('nograderecord', 'mod_micp');
-        $finalgrade = $grade && $grade->finalgrade !== null ? format_float((float)$grade->finalgrade, 2) : get_string('nograderecord', 'mod_micp');
-        $reviewurl = new moodle_url('/mod/micp/review.php', ['id' => $cm->id, 'userid' => $user->id]);
-
-        $rows[] = [
-            'fullname' => fullname($user),
-            'submissionstatus' => $summary['submitted'] ? get_string('submitted', 'mod_micp') : get_string('notsubmitted', 'mod_micp'),
-            'reviewstatus' => $summary['reviewstatuslabel'],
-            'lastsubmission' => $summary['showsubmittedat'] ? $summary['submittedatlabel'] : get_string('never', 'mod_micp'),
-            'activityscore' => is_numeric($summary['scorelabel']) ? $summary['scorelabel'] . '%' : $summary['scorelabel'],
-            'grade' => $rawgrade . ' / ' . $summary['grademaxlabel'],
-            'finalgrade' => $finalgrade,
-            'interactiondetails' => array_values($summary['details'] ?? []),
-            'interactionbreakdown' => implode(', ', array_map(static function(array $detail): string {
-                return ($detail['label'] ?? get_string('interactionfallbacklabel', 'mod_micp')) . ': ' . ($detail['scorelabel'] ?? '0 / 0');
-            }, $summary['details'] ?? [])),
-            'reviewaction' => $summary['submitted'] && ($summary['reviewstatus'] ?? '') !== 'not_required'
-                ? html_writer::link($reviewurl, get_string('reviewsubmission', 'mod_micp'))
-                : '',
-        ];
-    }
-
-    return $rows;
+    return (new \mod_micp\local\report_builder())->get_participant_rows($micp, $cm, $context, $groupid);
 }
 
 function micp_get_report_interaction_columns(array $rows): array {
-    $columns = [];
-
-    foreach ($rows as $row) {
-        foreach (($row['interactiondetails'] ?? []) as $detail) {
-            $interactionid = trim((string)($detail['interactionid'] ?? ''));
-            if ($interactionid === '' || isset($columns[$interactionid])) {
-                continue;
-            }
-
-            $columns[$interactionid] = [
-                'interactionid' => $interactionid,
-                'label' => (string)($detail['label'] ?? $interactionid),
-            ];
-        }
-    }
-
-    return array_values($columns);
+    return (new \mod_micp\local\report_builder())->get_interaction_columns($rows);
 }
 
 function micp_get_report_group_label($cm, int $groupid): string {
-    if (!groups_get_activity_groupmode($cm)) {
-        return get_string('groupmodedisabled', 'mod_micp');
-    }
-
-    if ($groupid <= 0) {
-        return get_string('allparticipantsgroup', 'mod_micp');
-    }
-
-    $group = groups_get_group($groupid);
-
-    return $group ? format_string($group->name) : get_string('allparticipantsgroup', 'mod_micp');
+    return (new \mod_micp\local\report_builder())->get_group_label($cm, $groupid);
 }
 
 function micp_get_report_group_options(stdClass $course, $cm): array {
-    $groups = [];
-
-    if (function_exists('groups_get_activity_allowed_groups')) {
-        $groups = groups_get_activity_allowed_groups($cm);
-    }
-
-    if (empty($groups)) {
-        $groups = groups_get_all_groups($course->id, 0, $cm->groupingid ?? 0);
-    }
-
-    $options = [0 => get_string('allparticipantsgroup', 'mod_micp')];
-
-    foreach ($groups as $group) {
-        if (!empty($group->id)) {
-            $options[(int)$group->id] = format_string((string)$group->name);
-        }
-    }
-
-    return $options;
+    return (new \mod_micp\local\report_builder())->get_group_options($course, $cm);
 }

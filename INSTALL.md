@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- Moodle 5.x
+- Moodle 5.0
 - PHP 8.1+
 
 ## Option 1. Install from Git
@@ -32,6 +32,8 @@ Download a release package and extract it so that Moodle ends up with:
 /path/to/your/moodle/mod/micp/lib.php
 /path/to/your/moodle/mod/micp/db/install.xml
 ```
+
+When preparing a release archive from Git, prefer `git archive` or an equivalent process that respects `.gitattributes`, so repository-only material such as examples and tests is not bundled unnecessarily.
 
 Then visit:
 
@@ -68,6 +70,8 @@ lang/
 templates/
 pix/
 ```
+
+Repository-only assets are kept under `examples/` and excluded from release archives by `.gitattributes`.
 
 ## Lesson Content
 

@@ -15,23 +15,34 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-$string['pluginname'] = 'MICP activity';
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+$string['pluginname'] = 'MICP';
 $string['pluginnameplural'] = 'MICP activities';
-$string['modulename'] = 'MICP activity';
+$string['modulename'] = 'MICP';
 $string['modulenameplural'] = 'MICP activities';
-$string['modulename_help'] = 'MICP is a placeholder interactive activity scaffold for Moodle 5.x.';
+$string['pluginadministration'] = 'MICP activity administration';
+$string['modulename_help'] = 'MICP delivers uploaded HTML lesson packages inside Moodle, records learner interactions, '
+    . 'applies server-side scoring rules, and supports optional manual review.';
 $string['micp:addinstance'] = 'Add a new MICP activity';
 $string['micp:view'] = 'View MICP activity';
 $string['micp:submit'] = 'Submit MICP activity responses';
 $string['micp:viewreports'] = 'View MICP activity reports';
-$string['activityplaceholder'] = 'MICP placeholder activity content will be rendered here.';
+$string['activityplaceholder'] = 'MICP lesson content will be rendered here.';
 $string['maximizeiframe'] = 'Fullscreen';
 $string['restoreinline'] = 'Exit fullscreen';
 $string['defaultlaunchpath'] = 'index.html';
 $string['launchpath'] = 'Launch path';
 $string['launchpath_help'] = 'Relative plugin-local HTML file to load for the embedded activity.';
 $string['launchfile'] = 'Uploaded HTML package or file';
-$string['launchfile_help'] = 'Upload either a ZIP package containing index.html and any required CSS, JavaScript, or image assets, or upload a single standalone HTML file. If present, it overrides the launch path setting.';
+$string['launchfile_help'] = 'Upload either a ZIP package containing index.html and any required CSS, JavaScript, or '
+    . 'image assets, or upload a single standalone HTML file. If present, it overrides the launch path setting.';
 $string['launchpathinvalidurl'] = 'Launch path must be a plugin-local relative HTML file.';
 $string['launchpathinvalidabsolute'] = 'Launch path must not start with /.';
 $string['launchpathinvalidtraversal'] = 'Launch path must not contain path traversal segments.';
@@ -48,10 +59,13 @@ $string['privacy:metadata:micp_submissions'] = 'The latest submission snapshot s
 $string['privacy:metadata:micp_submissions:userid'] = 'The ID of the learner who owns the submission.';
 $string['privacy:metadata:micp_submissions:rawjson'] = 'The raw submission payload received from the lesson runtime.';
 $string['privacy:metadata:micp_submissions:clientmeta'] = 'Additional client metadata supplied with the submission.';
-$string['privacy:metadata:micp_submissions:score'] = 'The automatically calculated percentage score before manual review.';
+$string['privacy:metadata:micp_submissions:score'] = 'The automatically calculated percentage score before manual '
+    . 'review.';
 $string['privacy:metadata:micp_submissions:reviewstatus'] = 'Whether the submission requires manual review.';
-$string['privacy:metadata:micp_submissions:finalscore'] = 'The final percentage score after manual review, when applicable.';
-$string['privacy:metadata:micp_submissions:reviewjson'] = 'The teacher review payload, including manual scores and comments.';
+$string['privacy:metadata:micp_submissions:finalscore'] = 'The final percentage score after manual review, when '
+    . 'applicable.';
+$string['privacy:metadata:micp_submissions:reviewjson'] = 'The teacher review payload, including manual scores and '
+    . 'comments.';
 $string['privacy:metadata:micp_submissions:reviewedby'] = 'The ID of the teacher who finalised manual review.';
 $string['privacy:metadata:micp_submissions:reviewedat'] = 'The time when manual review was completed.';
 $string['privacy:metadata:micp_submissions:timecreated'] = 'The time when the submission record was first created.';

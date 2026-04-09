@@ -1,271 +1,108 @@
-# mod_micp — AI 驱动的 Moodle 互动课件
+# mod_micp
 
-[**English**](./README.md)
+`mod_micp` 是一个 Moodle 活动模块，用于在 Moodle 中承载上传的 HTML 互动课件、记录学习者交互事件、按服务端规则评分，并将结果写入成绩册。
 
-> **传统方式：** 教师花几小时手动制作互动练习。
-> **mod_micp 方式：** 告诉 AI 你要教什么主题，马上拿到一套完整的互动课件。
+仓库根目录就是插件根目录。发布包解压后应直接落在 Moodle 的 `mod/micp` 目录下。
 
-mod_micp 只做一件事：用 AI 生成可自动评分的互动 HTML 课件，在 Moodle 里直接打分。
+## 主要能力
 
----
+- 以 ZIP 包或单个 HTML 文件形式上传课件
+- 在活动页中嵌入并启动上传内容
+- 通过 Moodle AJAX 服务记录学习者事件
+- 使用 `micp-scoring.json` 在服务端评分
+- 支持自动评分与教师人工复核混合流程
+- 通过 Moodle gradebook API 发布成绩
+- 通过隐私 API 导出、删除和枚举个人数据
+- 备份与恢复活动配置、上传课件和学习记录
 
-## 核心工作流
+## 运行要求
 
-```
-你 → "制作一个关于[主题]的课件" → AI 生成 ZIP 包
-                                               ↓
-                                    上传到 mod_micp
-                                               ↓
-                    学生互动 → 服务器评分 → 成绩写入 gradebook
-```
+- Moodle 5.0
+- PHP 8.1 及以上
+- 运行时不需要 Composer 或 npm
+- 学生使用时不需要外部 API Key
 
-**AI 负责创作。插件负责推送和评分。**
+## 安装
 
----
-
-## 现在就开始
-
-### 第一步：安装插件
+将仓库直接克隆到 Moodle 的 `mod` 目录：
 
 ```bash
 git clone git@github.com:YOUR_USERNAME/moodle-mod_micp.git /path/to/your/moodle/mod/micp
 ```
 
-或者下载插件发布 ZIP，解压后确保 Moodle 看到的是：
+或者安装发布包，确保 Moodle 能看到：
 
 ```text
 /path/to/your/moodle/mod/micp/version.php
 ```
 
-然后访问 **网站管理 → 通知** 完成安装或升级。依赖 **Moodle 5.x**，PHP 8.1+。
+然后访问 `站点管理 -> 通知`。
 
-### 运行要求
+详细安装说明见 [INSTALL.md](./INSTALL.md)。
 
-- 插件运行时不需要额外执行 Composer 或 npm 安装步骤
-- 不依赖其他 Moodle 插件
-- 学生在 Moodle 中运行已上传课件时，不需要额外的第三方订阅或 API Key
-- AI 生成课件只是上传前的可选创作流程；真正交付给学生的是上传后的 HTML 课件包和服务端评分规则
+## 课件包格式
 
-### 第二步：准备课件内容
+上传的课件包应包含：
 
-当前仓库只包含 Moodle 插件本体。
+- `index.html`
+- `micp-scoring.json`
+- 相关 `assets/`
 
-mod_micp 接受这样的课件包：
-- `index.html` — 互动课件页面
-- `micp-scoring.json` — 服务器评分规则
-- `assets/` — 打包好的 JS 运行时
+`window.MICP` 是客户端运行时桥接层，负责上报事件和提交结果，但成绩始终由服务端计算。
 
-这些课件可以手工编写，也可以由单独的作者工具生成。插件运行本身不依赖仓库内置的作者工具。
+如果没有 `micp-scoring.json`，插件会使用最小默认规则：只要记录到任意交互就给满分，没有交互则为零分。
 
-### 第三步：上传课件包
+## 仓库结构
 
-在 Moodle 中创建 `mod_micp` 活动并上传课件 ZIP，学生随后会在活动页面内直接运行该课件。
+仓库将 Moodle 插件代码放在根目录，并把非运行时示例资源单独归档。
 
----
-
-## 你得到什么
-
-| | 传统方式 | 使用 mod_micp |
-|---|---|---|
-| 制作一个课件 | 数小时 | ~30 秒（AI 生成） |
-| 评分 | 手动批改 | 自动 → gradebook |
-| 课件类型 | 固定模板 | 任意 HTML 互动设计 |
-| 维护 | 逐个学生反馈 | 服务端评分 |
-
-对于“客观题 + 主观题”的混合课件，mod_micp 还支持 **混合评分**：
-- 客观题立即自动评分
-- 主观题进入 **待教师批改**
-- 教师在活动报告中批改并发布最终成绩
-
-## 安装说明
-
-详见 [INSTALL.md](./INSTALL.md)，其中包含：
-- 使用 Git 安装
-- 使用发布 ZIP 安装
-- 升级流程
-- Moodle 中的目标目录结构
-
----
-
-## 工作方式
-
-```
-AI 生成课件包             插件承载与评分
-      ↓                        ↓
-[index.html] + [micp-scoring.json] → 学生打开活动
-                                     ↓
-                                学生互动
-                                MICP.sendEvent() → 服务器
-                                     ↓
-                                学生点击“提交”
-                                MICP.submit() → 评分
-                                     ↓
-                                grade_update() → Moodle 成绩册
-```
-
-- **客户端 SDK**（`window.MICP`）：负责发送事件和提交，不在前端算分
-- **服务端评分**：读取 `micp-scoring.json`，返回成绩
-- **成绩册写入**：通过 Moodle 官方 `grade_update()` API
-
-教师端报告支持：
-- 每个 interaction / 成绩点独立成列
-- 按小组筛选结果
-- 对主观题进行人工批改
-
-## 隐私
-
-mod_micp 只保存交付和评分所必需的数据，且数据保留在 Moodle 内部：
-- 课件运行时上报的学习者互动事件
-- 每位学习者最近一次提交快照
-- 教师完成主观题批改时产生的人工批改元数据
-
-插件运行已上传课件时，不要求把学习者数据发送到外部服务。
-
----
-
-## 为什么做这个
-
-教师不应该是模板工人，而应该是课程设计师。
-
-mod_micp 分离了关注点：
-- **你**决定学生应该经历什么、学到什么
-- **AI**构建互动页面
-- **插件**可靠地、大规模地推送和评分
-
----
-
-## 开源许可
-
-GPLv3
-
----
-
-## 技术文档
-
-<details>
-<summary>点击展开 — 完整技术细节</summary>
-
-### 课件包结构
-
-```
-my-lesson.zip
-├── index.html          # 互动 HTML（AI 生成）
-├── micp-scoring.json   # 评分规则
-└── assets/
-    └── micp.js         # 必需的运行时
-```
-
-### `micp-scoring.json`（由 AI 生成）
-
-```json
-{
-  "rules": [
-    {
-      "id": "q1_choice",
-      "label": "第一题",
-      "check": { "event": "interaction", "scoring": { "correct": "a" } }
-    }
-  ],
-  "scoring": { "strategy": "all_or_nothing" }
-}
-```
-
-不提供此文件时：**有任意一条互动记录得 100 分，否则 0 分**。
-
-### 客户端 SDK
-
-```javascript
-MICP.init();                                           // 页面加载时自动调用
-MICP.sendEvent('interaction', { interactionid: '...', response: '...', outcome: '...' });
-MICP.submit({ raw: { actions: actions } });            // 点击提交按钮时
-const ctx = MICP.getContext();                         // { cmid, userid, sesskey, ... }
-```
-
-### 评分策略
-
-- `all_or_nothing` — 全部规则满足 = 100 分，否则 0 分
-- `proportional` — 按规则权重给部分分
-
-### 混合人工批改
-
-`micp-scoring.json` 可以把某个 interaction 标记成教师复核：
-
-```json
-{
-  "id": "reflection_text",
-  "label": "简短反思",
-  "type": "text",
-  "weight": 20,
-  "gradingmode": "manual",
-  "scoring": {
-    "requireNonEmpty": true
-  }
-}
-```
-
-行为如下：
-- 客观题提交后立即自动评分
-- 主观题会让提交状态变成 **待批改**
-- 教师进入 report 后可以逐项打分并发布最终成绩
-
-### 成绩报告
-
-活动 report 现在支持：
-- 每个 interaction 单独成列，不再挤在一个 breakdown 里
-- 显式的小组下拉筛选
-- 对需要人工批改的提交显示 Review 入口
-
-### 权限定义
-
-| 权限 | 默认角色 | 说明 |
-|---|---|---|
-| `mod/micp:addinstance` | 教师 | 创建/编辑活动 |
-| `mod/micp:view` | 学生 | 查看和互动 |
-| `mod/micp:submit` | 学生 | 提交并获得成绩 |
-| `mod/micp:viewreports` | 教师 | 查看成绩报告 |
-
-### 仓库结构
-
-```
+```text
 .
 ├── amd/
 ├── backup/
 ├── classes/
 ├── db/
+├── examples/
 ├── lang/
 ├── pix/
-├── sample_content/
 ├── templates/
 ├── tests/
 ├── version.php
 ├── lib.php
-├── README.md
-└── README_zh.md
+├── mod_form.php
+└── view.php
 ```
 
-### 插件架构
+- `examples/` 存放仓库附带的示例课件与打包样例
+- `.gitattributes` 将仓库专用内容从发布归档中排除
+- `tests/` 存放评分和提交流程相关的 PHPUnit 测试
 
-```
-mod_micp 仓库根目录
-├── version.php             # 插件元数据
-├── lib.php                 # 评分引擎、gradebook 封装
-├── view.php                # 活动页面（iframe 容器）
-├── styles.css              # 活动承载页样式
-├── templates/activity.mustache  # 活动承载页模板
-├── file.php                # 插件文件访问（课件资源服务）
-├── report.php              # 参与者成绩报告
-├── review.php              # 人工批改流程
-├── micp.js                 # 客户端 SDK
-├── db/install.xml          # 数据表：micp_events, micp_submissions
-├── db/services.php         # Moodle AJAX 接口
-├── classes/external/       # AJAX 入口
-├── classes/local/
-│   └── ...                 # 评分、仓储与提交服务
-└── lang/en/micp.php
-```
+## 教师使用流程
 
-</details>
+1. 在 Moodle 中创建一个 `mod_micp` 活动。
+2. 上传 ZIP 课件包或单个 HTML 文件。
+3. 学生打开活动并与嵌入式课件交互。
+4. 课件运行时将事件和提交发送给 Moodle。
+5. 客观题立即评分，需要人工处理的项目进入待审核状态。
+6. 插件保存结果并更新成绩册。
 
-## 更新日志
+## 隐私
 
-详见 [CHANGELOG.md](./CHANGELOG.md)。
+插件只保存交付和评分所需的数据：
+
+- 学习者交互事件
+- 每位学习者最新一次提交快照
+- 教师完成复核后留下的审核元数据
+
+运行上传课件时不需要将学习者数据发送到外部服务。
+
+## 开发资料
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [INSTALL.md](./INSTALL.md)
+- [CHANGES.md](./CHANGES.md)
+- [SECURITY.md](./SECURITY.md)
+
+## 许可
+
+GPL v3 或更高版本

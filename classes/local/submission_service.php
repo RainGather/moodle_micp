@@ -15,17 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_micp\local;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/micp/lib.php');
-
 class submission_service {
     private submission_repository $submissions;
+    private result_service $results;
 
-    public function __construct(?submission_repository $submissions = null) {
+    public function __construct(?submission_repository $submissions = null, ?result_service $results = null) {
         $this->submissions = $submissions ?? new submission_repository();
+        $this->results = $results ?? new result_service();
     }
 
     public function submit(\stdClass $micp, int $userid, string $rawjson, ?string $clientmeta): array {
@@ -33,7 +41,7 @@ class submission_service {
 
         $transaction = $DB->start_delegated_transaction();
 
-        $evaluation = \micp_evaluate($micp, $userid);
+        $evaluation = $this->results->evaluate($micp, $userid);
         $reviewstatus = !empty($evaluation['needsmanualreview']) ? 'pending' : 'not_required';
         $submission = $this->submissions->upsert(
             $micp->id,
@@ -50,7 +58,7 @@ class submission_service {
 
         $transaction->allow_commit();
 
-        $gradeupdatestatus = \micp_update_grades($micp, $userid);
+        $gradeupdatestatus = $this->results->update_grades($micp, $userid);
 
         return [
             'submission' => $submission,

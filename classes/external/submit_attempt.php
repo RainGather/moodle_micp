@@ -15,9 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_micp\external;
 
 use mod_micp\local\activity_locator;
+use mod_micp\local\result_service;
 use mod_micp\local\submission_service;
 
 defined('MOODLE_INTERNAL') || die();
@@ -29,7 +38,12 @@ class submit_attempt extends \external_api {
         return new \external_function_parameters([
             'cmid' => new \external_value(\PARAM_INT, 'Course module id'),
             'rawjson' => new \external_value(\PARAM_RAW, 'JSON encoded submission payload'),
-            'clientmeta' => new \external_value(\PARAM_RAW, 'Optional JSON encoded client metadata', \VALUE_DEFAULT, ''),
+            'clientmeta' => new \external_value(
+                \PARAM_RAW,
+                'Optional JSON encoded client metadata',
+                \VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 
@@ -55,6 +69,7 @@ class submit_attempt extends \external_api {
         \require_capability('mod/micp:submit', $resolved['context']);
 
         $service = new submission_service();
+        $results = new result_service();
         $result = $service->submit(
             $resolved['micp'],
             (int) $USER->id,
@@ -72,7 +87,9 @@ class submit_attempt extends \external_api {
             'rawgrade' => (int) ($evaluation['rawgrade'] ?? 0),
             'timemodified' => (int) $submission->timemodified,
             'gradeupdated' => (int) $result['gradeupdatestatus'] === \GRADE_UPDATE_OK,
-            'resultsummary' => self::normalise_result_summary(\micp_get_user_result_summary($resolved['micp'], (int) $USER->id)),
+            'resultsummary' => self::normalise_result_summary(
+                $results->get_user_result_summary($resolved['micp'], (int)$USER->id)
+            ),
         ];
     }
 

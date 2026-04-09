@@ -15,6 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 function xmldb_micp_upgrade(int $oldversion): bool {
@@ -25,7 +33,16 @@ function xmldb_micp_upgrade(int $oldversion): bool {
     if ($oldversion < 2026040200) {
         $table = new xmldb_table('micp_submissions');
 
-        $field = new xmldb_field('reviewstatus', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'not_required', 'score');
+        $field = new xmldb_field(
+            'reviewstatus',
+            XMLDB_TYPE_CHAR,
+            '20',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            'not_required',
+            'score'
+        );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }

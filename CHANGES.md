@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-alpha] — 2026-04-09
+
+### Changed
+- Reorganised repository-only lesson examples under `examples/`
+- Added `.gitattributes` rules so release archives exclude examples, tests, and contribution-only files
+- Rewrote plugin-facing documentation to describe the repository as a formal Moodle activity module package
+- Tightened declared Moodle support metadata to the tested Moodle 5.0 branch
+
 ## [0.1.4-alpha] — 2026-04-08
 
 ### Added
@@ -44,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MICP.submit()` with JSON POST and session-aware scoring
 - `file.php` pluginfile handler for ZIP package extraction
 - `report.php` participant grade report (teacher view)
-- Built-in demo lesson: `sample_content/demo.html`
+- Built-in demo lesson: `examples/demo-package/index.html`
 
 ### Security
 - All write ops require `require_login()` + `require_sesskey()`

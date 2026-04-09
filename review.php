@@ -15,10 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/lib.php');
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
-use mod_micp\local\submission_repository;
+require_once(__DIR__ . '/../../config.php');
 
 $id = required_param('id', PARAM_INT);
 $userid = required_param('userid', PARAM_INT);
@@ -29,12 +34,13 @@ $micp = $DB->get_record('micp', ['id' => $cm->instance], '*', MUST_EXIST);
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/micp:viewreports', $context);
+$results = new \mod_micp\local\result_service();
 
 $student = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
-$submission = micp_get_submission_record($micp, $userid);
-$evaluation = micp_evaluate($micp, $userid);
-$reviewdata = micp_get_review_data($submission);
-$latestactions = micp_get_latest_submission_actions_by_interactionid($submission);
+$submission = $results->get_submission_record($micp, $userid);
+$evaluation = $results->evaluate($micp, $userid);
+$reviewdata = $results->get_review_data($submission);
+$latestactions = $results->get_latest_submission_actions_by_interactionid($submission);
 $manualdetails = array_values(array_filter($evaluation['details'] ?? [], static function(array $detail): bool {
     return ($detail['gradingmode'] ?? 'auto') === 'manual';
 }));
@@ -81,7 +87,7 @@ if (optional_param('save', '', PARAM_ALPHA) === 'finalize' && confirm_sesskey())
     }
 
     $finalscore = $totalmax > 0 ? (int)round((($autoearned + $manualearned) / $totalmax) * 100) : 0;
-    $repository = new submission_repository();
+    $repository = new \mod_micp\local\submission_repository();
     $repository->save_review(
         $micp->id,
         $userid,
@@ -94,7 +100,7 @@ if (optional_param('save', '', PARAM_ALPHA) === 'finalize' && confirm_sesskey())
         time()
     );
 
-    micp_update_grades($micp, $userid);
+    $results->update_grades($micp, $userid);
     redirect($url, get_string('reviewsaved', 'mod_micp'));
 }
 
@@ -112,7 +118,15 @@ echo html_writer::tag('p', get_string('reviewingstudent', 'mod_micp', fullname($
 echo html_writer::tag('p', get_string('reviewsubmissiontime', 'mod_micp', userdate((int)$submission->timemodified)));
 echo html_writer::tag('p', get_string('reviewprovisionalscore', 'mod_micp', (object)[
     'score' => (int)($submission->score ?? 0),
-    'grade' => format_float((float)((micp_normalize_grade($micp->grade ?? null) * (int)($submission->score ?? 0)) / 100), 2),
+    'grade' => format_float(
+        (float)(
+            (
+                \mod_micp\local\activity_settings::normalize_grade($micp->grade ?? null) *
+                (int)($submission->score ?? 0)
+            ) / 100
+        ),
+        2
+    ),
 ]));
 
 if (!$manualdetails) {
@@ -134,9 +148,15 @@ foreach ($manualdetails as $detail) {
     $reviewitem = $reviewdata['items'][$interactionid] ?? [];
     $fieldset = [];
     $fieldset[] = html_writer::tag('h3', s((string)($detail['label'] ?? $interactionid)));
-    $fieldset[] = html_writer::tag('p', get_string('reviewmaxpoints', 'mod_micp', format_float((float)($detail['max'] ?? 0), 2)));
+    $fieldset[] = html_writer::tag(
+        'p',
+        get_string('reviewmaxpoints', 'mod_micp', format_float((float)($detail['max'] ?? 0), 2))
+    );
     $fieldset[] = html_writer::tag('p', get_string('reviewlearnerresponse', 'mod_micp'));
-    $fieldset[] = html_writer::tag('pre', s($response !== '' ? (string)$response : get_string('noresponsecaptured', 'mod_micp')));
+    $fieldset[] = html_writer::tag(
+        'pre',
+        s($response !== '' ? (string)$response : get_string('noresponsecaptured', 'mod_micp'))
+    );
     $fieldset[] = html_writer::label(get_string('reviewscorelabel', 'mod_micp'), 'score_' . $interactionid);
     $fieldset[] = html_writer::empty_tag('input', [
         'type' => 'number',
@@ -165,7 +185,11 @@ echo html_writer::tag('textarea', s((string)($reviewdata['generalcomment'] ?? ''
     'rows' => 4,
     'class' => 'form-control mb-3',
 ]);
-echo html_writer::empty_tag('input', ['type' => 'submit', 'class' => 'btn btn-primary', 'value' => get_string('finalizereview', 'mod_micp')]);
+echo html_writer::empty_tag('input', [
+    'type' => 'submit',
+    'class' => 'btn btn-primary',
+    'value' => get_string('finalizereview', 'mod_micp'),
+]);
 echo html_writer::end_tag('form');
 
 echo $OUTPUT->footer();

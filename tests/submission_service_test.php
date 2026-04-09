@@ -15,6 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_micp;
 
 defined('MOODLE_INTERNAL') || die();
@@ -56,7 +64,7 @@ final class submission_service_test extends \advanced_testcase {
             'intro' => '',
             'introformat' => 0,
             'grade' => 100,
-            'launchpath' => 'sample_content/demo.html',
+            'launchpath' => 'examples/demo-package/index.html',
             'timemodified' => time(),
         ];
 

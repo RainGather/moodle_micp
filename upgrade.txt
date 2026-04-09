@@ -1,0 +1,12 @@
+This file describes significant upgrade notes for mod_micp.
+
+== 5.0 ==
+
+* Repository-only lesson samples were moved to examples/.
+* Release archives are expected to exclude repository-only files through
+  .gitattributes.
+* The plugin root was reorganised to match Moodle activity-module layout
+  expectations more closely.
+* Backup and restore support was added for activity settings, uploaded
+  packages, learner events, and submission snapshots.
+* A privacy provider was added for stored interaction and submission data.

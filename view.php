@@ -15,8 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/lib.php');
 
 $id = required_param('id', PARAM_INT);
 
@@ -26,6 +33,8 @@ $micp = $DB->get_record('micp', ['id' => $cm->instance], '*', MUST_EXIST);
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/micp:view', $context);
+$results = new \mod_micp\local\result_service();
+$launchmanager = new \mod_micp\local\launch_manager();
 
 $iframeid = 'mod-micp-iframe-' . $cm->id;
 $iframetitle = format_string($micp->name);
@@ -50,8 +59,8 @@ $amdarguments = [
     ],
 ];
 
-$resultsummary = micp_get_user_result_summary($micp, (int)$USER->id);
-$launch = micp_get_launch_url($micp, $context);
+$resultsummary = $results->get_user_result_summary($micp, (int)$USER->id);
+$launch = $launchmanager->get_launch_url($micp, $context);
 $iframeurl = $launch['url'];
 $launchpath = $launch['path'];
 $amdarguments['iframeSrc'] = $iframeurl;

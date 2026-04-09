@@ -15,8 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/lib.php');
 
 $id = required_param('id', PARAM_INT);
 
@@ -26,6 +33,7 @@ $micp = $DB->get_record('micp', ['id' => $cm->instance], '*', MUST_EXIST);
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/micp:viewreports', $context);
+$reportbuilder = new \mod_micp\local\report_builder();
 
 $url = new moodle_url('/mod/micp/report.php', ['id' => $cm->id]);
 $selectedgroup = optional_param('group', null, PARAM_INT);
@@ -35,17 +43,17 @@ $PAGE->set_url($url);
 $PAGE->set_title(get_string('reporttitle', 'mod_micp'));
 $PAGE->set_heading(format_string($course->fullname));
 
-$rows = micp_get_participant_report_rows($micp, $cm, $context, (int)$groupid);
-$interactioncolumns = micp_get_report_interaction_columns($rows);
-$currentgrouplabel = micp_get_report_group_label($cm, (int)$groupid);
-$groupoptions = micp_get_report_group_options($course, $cm);
+$rows = $reportbuilder->get_participant_rows($micp, $cm, $context, (int)$groupid);
+$interactioncolumns = $reportbuilder->get_interaction_columns($rows);
+$currentgrouplabel = $reportbuilder->get_group_label($cm, (int)$groupid);
+$groupoptions = $reportbuilder->get_group_options($course, $cm);
 $submittedcount = 0;
 $gradedcount = 0;
 foreach ($rows as $row) {
-    if ($row['submissionstatus'] === get_string('submitted', 'mod_micp')) {
+    if (!empty($row['submitted'])) {
         $submittedcount++;
     }
-    if ($row['finalgrade'] !== get_string('nograderecord', 'mod_micp')) {
+    if (!empty($row['hasfinalgrade'])) {
         $gradedcount++;
     }
 }

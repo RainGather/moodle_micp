@@ -15,6 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * mod_micp plugin file.
+ *
+ * @package     mod_micp
+ * @copyright   2026 RainGather
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_micp\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -44,7 +52,7 @@ class scoring_service {
 
             return [
                 'score' => $score,
-                'rawgrade' => $hasinteraction ? \micp_normalize_grade($micp->grade ?? null) : 0,
+                'rawgrade' => $hasinteraction ? activity_settings::normalize_grade($micp->grade ?? null) : 0,
                 'details' => [],
                 'configvalid' => false,
             ];
@@ -103,7 +111,7 @@ class scoring_service {
 
         $normalized = $totalmax > 0 ? ($totalearned / $totalmax) * 100 : 0;
         $score = (int)round($normalized);
-        $rawgrade = (int)round((\micp_normalize_grade($micp->grade ?? null) * $score) / 100);
+        $rawgrade = (int)round((activity_settings::normalize_grade($micp->grade ?? null) * $score) / 100);
 
         return [
             'score' => max(0, min(100, $score)),
@@ -165,7 +173,7 @@ class scoring_service {
     private function load_local_config(\stdClass $micp): ?string {
         global $CFG;
 
-        $launchpath = \micp_resolve_launch_path($micp->launchpath ?? '');
+        $launchpath = activity_settings::resolve_launch_path($micp->launchpath ?? '');
         $directory = dirname($launchpath);
         $relative = ($directory === '.' ? '' : $directory . '/') . 'micp-scoring.json';
         $fullpath = $CFG->dirroot . '/mod/micp/' . $relative;
