@@ -65,6 +65,33 @@ You can create that package in different ways:
 
 MICP does not require AI in order to run. AI is optional. The plugin's job is to deliver, record, score, and report the activity inside Moodle.
 
+## AI Lesson Package Builder
+
+If you want the fastest authoring path, use the companion repository:
+
+- MICP Lesson Package Builder: `https://github.com/RainGather/moodle_micp_skill`
+
+That repository is a reusable instruction pack for AI assistants. It helps an AI tool generate:
+
+- `index.html`
+- `micp-scoring.json`
+- any required lesson assets
+
+The simplest usage pattern is:
+
+1. Open the skill repository or give it to your AI assistant.
+2. Ask for a lesson on your teaching topic.
+3. Let the assistant generate the lesson package.
+4. Upload the generated package into the MICP activity in Moodle.
+
+Example prompt:
+
+```text
+Create a MICP lesson about photosynthesis for secondary school students.
+```
+
+You do not need to understand GitHub or programming details to benefit from this workflow. The practical goal is simply to get an uploadable interactive lesson package faster.
+
 ## What Changes In Teaching Practice
 
 Without a tool like this, teachers often face a bad choice:
