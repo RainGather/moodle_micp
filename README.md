@@ -2,9 +2,11 @@
 
 [**中文版**](./README_zh.md)
 
-MICP is a Moodle activity plugin for interactive lessons.
+MICP is a Moodle activity plugin for low-cost interactive HTML lessons.
 
-In plain language: it lets a teacher put an interactive HTML lesson into Moodle as a normal course activity, let students use it online, and send the result back to Moodle gradebook.
+In plain language: it helps a teacher turn an interactive HTML lesson into a normal Moodle activity, let students use it online, and send the result back to Moodle gradebook.
+
+You do not need to build a custom Moodle plugin for every idea. You do not need to move the activity outside Moodle. You do not need to give up grading and reporting just because the lesson is interactive.
 
 This is useful when a normal Moodle page or quiz is not enough, for example:
 
@@ -12,6 +14,11 @@ This is useful when a normal Moodle page or quiz is not enough, for example:
 - drag/drop or step-by-step activities
 - simulations or visual explorations
 - short written reflections mixed with automatically scored questions
+- interactive labs or guided experiments
+
+If you want the short version, it is this:
+
+**MICP makes it much cheaper to create interactive activities that still behave like real Moodle activities.**
 
 ## What A Teacher Gets
 
@@ -23,7 +30,15 @@ With MICP, a teacher can:
 - keep subjective parts for teacher review
 - see results inside Moodle instead of using a separate website
 
-The main benefit is simple: richer learning activities can run inside Moodle without building a custom plugin for every lesson.
+The main benefit is simple: richer learning activities can run inside Moodle without building a separate technical system for every lesson.
+
+For many teachers, that means they can finally use activities such as:
+
+- interactive science demonstrations
+- guided digital experiments
+- visual concept walkthroughs
+- multi-step practice tasks
+- mixed objective + open-response activities
 
 ## How It Works
 
@@ -59,12 +74,18 @@ Without a tool like this, teachers often face a bad choice:
 
 MICP is meant to remove that tradeoff.
 
+That is why the most interesting use case is not just "HTML content".
+
+The interesting use case is **interactive teaching activities that would usually be too expensive or too technical to build and maintain in Moodle**.
+
 It helps when a teacher wants students to:
 
 - explore a diagram or process
 - complete a guided multi-step activity
 - interact with a custom visual explanation
 - submit both objective answers and open responses in one activity
+
+When AI-assisted authoring is available, that cost can drop even further: a teacher or course team can describe an activity idea, generate the package, upload it, and run it as a real Moodle activity.
 
 ## Quick Start
 
