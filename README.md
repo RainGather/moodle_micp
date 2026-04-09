@@ -2,43 +2,108 @@
 
 [**中文版**](./README_zh.md)
 
-> **The old way:** teachers spend hours building or improvising interactive activities outside Moodle.
-> **The MICP way:** describe the activity once, upload one package, let Moodle deliver it, record it, score it, and report it.
+MICP is a Moodle activity plugin for interactive lessons.
 
-`MICP for Moodle` is a Moodle activity module for teachers who want richer interactive learning activities without building a custom plugin or grading workflow for each lesson.
+In plain language: it lets a teacher put an interactive HTML lesson into Moodle as a normal course activity, let students use it online, and send the result back to Moodle gradebook.
 
-It delivers uploaded HTML lesson packages inside Moodle, records learner interaction events, applies server-side scoring rules, and publishes grades to the gradebook.
+This is useful when a normal Moodle page or quiz is not enough, for example:
 
-The repository root is the plugin root. A release package must unpack directly to `mod/micp` in a Moodle site.
+- click-through practice
+- drag/drop or step-by-step activities
+- simulations or visual explorations
+- short written reflections mixed with automatically scored questions
 
-## Why Teachers Care
+## What A Teacher Gets
 
-Many teachers know exactly what they want students to do, but the implementation cost is what kills the idea:
+With MICP, a teacher can:
 
-- the interaction needs a real interface, not just a quiz form
-- the result still needs to end up in Moodle gradebook
-- the teacher still needs a workable review flow for non-objective responses
-- the activity still needs to be reusable next term, not a one-off demo page
+- upload one lesson package into Moodle
+- let students open it like a normal activity
+- automatically score the objective parts
+- keep subjective parts for teacher review
+- see results inside Moodle instead of using a separate website
 
-MICP changes that tradeoff:
+The main benefit is simple: richer learning activities can run inside Moodle without building a custom plugin for every lesson.
 
-- interactive lessons can be delivered as normal Moodle activities instead of one-off web demos
-- objective evidence can be scored automatically and returned to the gradebook
-- open responses can stay in a teacher review queue instead of disappearing into a static file
-- one activity design can support more active practice, simulation, exploration, and reflection than a standard quiz page
+## How It Works
 
-In practice, this means less time spent on packaging, ad-hoc marking, and technical glue, and more time spent on task design, feedback, and iteration.
+1. Install the MICP plugin in Moodle.
+2. Prepare or obtain a lesson package.
+3. Create a MICP activity in a course.
+4. Upload the lesson package.
+5. Students open the activity and complete it.
+6. Moodle stores the result and updates the gradebook.
 
-## The Core Loop
+## What Is A Lesson Package
+
+A lesson package is usually a ZIP file containing:
+
+- `index.html`
+- `micp-scoring.json`
+- optional `assets/`
+
+You can create that package in different ways:
+
+- write it manually
+- have a developer build it
+- use an AI authoring workflow
+
+MICP does not require AI in order to run. AI is optional. The plugin's job is to deliver, record, score, and report the activity inside Moodle.
+
+## What Changes In Teaching Practice
+
+Without a tool like this, teachers often face a bad choice:
+
+- stay inside Moodle, but use only rigid activity types
+- build richer web activities, but lose Moodle integration
+
+MICP is meant to remove that tradeoff.
+
+It helps when a teacher wants students to:
+
+- explore a diagram or process
+- complete a guided multi-step activity
+- interact with a custom visual explanation
+- submit both objective answers and open responses in one activity
+
+## Quick Start
+
+### 1. Install the plugin
+
+Place this repository in Moodle as:
 
 ```text
-Teacher idea -> AI or author creates a lesson package -> upload to MICP
-                                                       -> students interact
-                                                       -> server scores
-                                                       -> Moodle gradebook + report
+/path/to/your/moodle/mod/micp
 ```
 
-The important point is not just that the page looks interactive. The important point is that the activity becomes operational inside Moodle.
+Then visit:
+
+```text
+Site administration -> Notifications
+```
+
+Detailed installation notes are in [INSTALL.md](./INSTALL.md).
+
+### 2. Create a MICP activity
+
+Inside a Moodle course:
+
+1. Turn editing on.
+2. Add an activity.
+3. Choose `MICP`.
+4. Upload a lesson ZIP or single HTML file.
+5. Save the activity.
+
+### 3. Run it with students
+
+Students open the activity in Moodle, interact with the lesson, and submit it.
+
+MICP can:
+
+- record interaction events
+- score the attempt on the server
+- send the grade to Moodle gradebook
+- keep manual-review items for teacher follow-up
 
 ## Key Capabilities
 
@@ -51,17 +116,6 @@ The important point is not just that the page looks interactive. The important p
 - Export, delete, and enumerate personal data through the privacy API
 - Back up and restore activity configuration, uploaded packages, and learner records
 
-## Teaching Impact
-
-MICP is designed for cases where a normal Moodle page or quiz is too rigid:
-
-- scenario-based practice where students must explore, compare, or manipulate content
-- visual or interactive explanations that need a real interface, not only static text
-- mixed assessment flows where some evidence can be auto-scored and some should be reviewed by a teacher
-- reusable lesson packages that course teams can improve over time without re-engineering grading each time
-
-The practical value is not "more attractive HTML". The real gain is that richer activities become launchable, traceable, gradable, reviewable, and reportable in the same place teachers already run their courses.
-
 ## Requirements
 
 - Moodle 5.0
@@ -69,25 +123,9 @@ The practical value is not "more attractive HTML". The real gain is that richer 
 - No Composer or npm step is required for runtime
 - No external API key is required for learners
 
-## Installation
+## Technical Notes
 
-Clone the repository directly into Moodle's `mod` directory:
-
-```bash
-git clone git@github.com:YOUR_USERNAME/moodle-mod_micp.git /path/to/your/moodle/mod/micp
-```
-
-Or install from a release archive so that Moodle finds:
-
-```text
-/path/to/your/moodle/mod/micp/version.php
-```
-
-Then visit `Site administration -> Notifications`.
-
-Detailed installation notes are in [INSTALL.md](./INSTALL.md).
-
-## Lesson Package Format
+The repository root is the plugin root. A release package must unpack directly to `mod/micp` in a Moodle site.
 
 The uploaded lesson package should contain:
 
@@ -100,8 +138,6 @@ The uploaded lesson package should contain:
 Without `micp-scoring.json`, the plugin falls back to a minimal completion rule: any recorded interaction produces a full score, and no interaction produces zero.
 
 ## Repository Layout
-
-The repository keeps Moodle plugin code at the root and stores non-runtime examples separately.
 
 ```text
 .
@@ -123,25 +159,6 @@ The repository keeps Moodle plugin code at the root and stores non-runtime examp
 - `examples/` contains repository-only sample lesson packages and source files
 - `.gitattributes` marks repository-only material so release archives stay focused on the plugin itself
 - `tests/` contains PHPUnit coverage for scoring and submission services
-
-## Teacher Workflow
-
-1. Create a `mod_micp` activity in Moodle.
-2. Upload a ZIP package or single HTML file.
-3. Students open the activity and interact with the embedded lesson.
-4. The lesson runtime sends events and submissions to Moodle.
-5. The plugin scores objective items immediately and queues manual items for review when required.
-6. Moodle stores the result and updates the gradebook.
-
-## Privacy
-
-The plugin stores only data required to deliver and grade the activity:
-
-- learner interaction events
-- the latest submission snapshot per learner
-- manual-review metadata when a teacher finalises a review
-
-The runtime does not require sending learner data to an external service.
 
 ## Development Notes
 
