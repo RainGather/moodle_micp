@@ -32,6 +32,13 @@ cp -r mod/micp /path/to/your/moodle/mod/
 ```
 Visit **Site Administration → Notifications**. Requires **Moodle 5.x**, PHP 8.1+.
 
+### Runtime Requirements
+
+- No Composer or npm install step is required for plugin runtime
+- No additional Moodle plugin dependency is required
+- No external subscription or API key is required for learners to run uploaded lesson packages inside Moodle
+- AI-assisted authoring is optional and happens before upload; the delivered activity runs from the uploaded HTML package and server-side grading rules
+
 ### 2. Generate your lesson with the bundled Skill
 
 This repo ships with **`micp-html-authoring`** — an AI agent Skill that knows how to build mod_micp lesson packages.
@@ -97,6 +104,15 @@ Teacher-facing reporting includes:
 - one column per interaction / scoring point
 - explicit group filtering on the results page
 - manual review workflow for subjective responses
+
+## Privacy
+
+mod_micp stores only the data needed to deliver and grade the activity inside Moodle:
+- learner interaction events sent by the embedded lesson runtime
+- the latest submission snapshot per learner
+- manual-review metadata when a teacher finalises subjective items
+
+The plugin does not require sending learner data to an external service in order to run uploaded lesson packages.
 
 ---
 

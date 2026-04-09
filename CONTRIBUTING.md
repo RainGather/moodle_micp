@@ -7,7 +7,7 @@ Thank you for your interest in contributing!
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally:
    ```bash
-   git clone git@github.com:YOUR_USERNAME/moodle_micp.git
+   git clone git@github.com:YOUR_USERNAME/moodle-mod_micp.git
    ```
 3. **Create a feature branch**:
    ```bash
@@ -50,10 +50,13 @@ Please open a GitHub Issue with:
 - Steps to reproduce
 - Expected vs actual behavior
 
+When publishing the plugin publicly, prefer Moodle's repository naming convention:
+- `moodle-mod_micp`
+
 ## Security
 
 If you discover a security vulnerability, **do not open a public issue**.
-Email the maintainers directly instead.
+Use the repository's private security disclosure channel, or the maintainer contact published with the plugin release.
 
 ## License
 
