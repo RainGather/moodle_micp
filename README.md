@@ -1,8 +1,11 @@
-# mod_micp
+# MICP for Moodle (`mod_micp`)
 
 [**中文版**](./README_zh.md)
 
-`mod_micp` is a Moodle activity module for teachers who want richer interactive learning activities without building a custom plugin or grading workflow for each lesson.
+> **The old way:** teachers spend hours building or improvising interactive activities outside Moodle.
+> **The MICP way:** describe the activity once, upload one package, let Moodle deliver it, record it, score it, and report it.
+
+`MICP for Moodle` is a Moodle activity module for teachers who want richer interactive learning activities without building a custom plugin or grading workflow for each lesson.
 
 It delivers uploaded HTML lesson packages inside Moodle, records learner interaction events, applies server-side scoring rules, and publishes grades to the gradebook.
 
@@ -10,16 +13,32 @@ The repository root is the plugin root. A release package must unpack directly t
 
 ## Why Teachers Care
 
-Many teachers can describe a strong learning activity but do not have time to hand-build front-end interactions, wire grading logic, and maintain separate reporting flows.
+Many teachers know exactly what they want students to do, but the implementation cost is what kills the idea:
 
-`mod_micp` changes that tradeoff:
+- the interaction needs a real interface, not just a quiz form
+- the result still needs to end up in Moodle gradebook
+- the teacher still needs a workable review flow for non-objective responses
+- the activity still needs to be reusable next term, not a one-off demo page
+
+MICP changes that tradeoff:
 
 - interactive lessons can be delivered as normal Moodle activities instead of one-off web demos
 - objective evidence can be scored automatically and returned to the gradebook
 - open responses can stay in a teacher review queue instead of disappearing into a static file
 - one activity design can support more active practice, simulation, exploration, and reflection than a standard quiz page
 
-In practice, this means less time spent on packaging and manual score handling, and more time spent on task design, feedback, and iteration.
+In practice, this means less time spent on packaging, ad-hoc marking, and technical glue, and more time spent on task design, feedback, and iteration.
+
+## The Core Loop
+
+```text
+Teacher idea -> AI or author creates a lesson package -> upload to MICP
+                                                       -> students interact
+                                                       -> server scores
+                                                       -> Moodle gradebook + report
+```
+
+The important point is not just that the page looks interactive. The important point is that the activity becomes operational inside Moodle.
 
 ## Key Capabilities
 
@@ -34,14 +53,14 @@ In practice, this means less time spent on packaging and manual score handling, 
 
 ## Teaching Impact
 
-`mod_micp` is designed for cases where a normal Moodle page or quiz is too rigid:
+MICP is designed for cases where a normal Moodle page or quiz is too rigid:
 
 - scenario-based practice where students must explore, compare, or manipulate content
 - visual or interactive explanations that need a real interface, not only static text
 - mixed assessment flows where some evidence can be auto-scored and some should be reviewed by a teacher
 - reusable lesson packages that course teams can improve over time without re-engineering grading each time
 
-The practical value is not just "more attractive HTML". The real gain is that richer activities become operational inside Moodle: launchable, traceable, gradable, reviewable, and reportable.
+The practical value is not "more attractive HTML". The real gain is that richer activities become launchable, traceable, gradable, reviewable, and reportable in the same place teachers already run their courses.
 
 ## Requirements
 
