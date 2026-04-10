@@ -70,6 +70,6 @@ class activity_settings {
     public static function normalize_grade($grade): int {
         $grade = (int)($grade ?? 0);
 
-        return $grade > 0 ? $grade : 100;
+        return $grade > 0 ? $grade : 10;
     }
 }

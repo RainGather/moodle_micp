@@ -54,7 +54,7 @@ class mod_micp_mod_form extends moodleform_mod {
         );
 
         $this->standard_grading_coursemodule_elements();
-        $mform->setDefault('grade', \mod_micp\local\activity_settings::normalize_grade(100));
+        $mform->setDefault('grade', \mod_micp\local\activity_settings::normalize_grade(10));
 
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();

@@ -26,8 +26,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_micp';
-$plugin->version = 2026040900;
+$plugin->version = 2026041000;
 $plugin->requires = 2025041400.00;
 $plugin->supported = [500, 500];
 $plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.2.0-alpha';
+$plugin->release = '0.2.1-alpha';

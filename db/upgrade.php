@@ -75,5 +75,16 @@ function xmldb_micp_upgrade(int $oldversion): bool {
         upgrade_mod_savepoint(true, 2026040200, 'micp');
     }
 
+    if ($oldversion < 2026041000) {
+        $table = new xmldb_table('micp');
+        $field = new xmldb_field('grade', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '10', 'introformat');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_default($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026041000, 'micp');
+    }
+
     return true;
 }
