@@ -51,11 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `mod_micp` activity module, compatible with **Moodle 5.x**
 - Server-side scoring engine reading `micp-scoring.json` rules
-- Two scoring strategies: `all_or_nothing` and `proportional`
 - Gradebook integration via `grade_update()` official API
 - AJAX event submission via Moodle `core/ajax` services
-- `MICP.sendEvent()` with `navigator.sendBeacon` fallback
-- `MICP.submit()` with JSON POST and session-aware scoring
+- `MICP.sendEvent()` iframe bridge for learner interaction reporting
+- `MICP.submit()` iframe bridge for session-aware submission
 - `file.php` pluginfile handler for ZIP package extraction
 - `report.php` participant grade report (teacher view)
 - Built-in demo lesson: `examples/demo-package/index.html`
